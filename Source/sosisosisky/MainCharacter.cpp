@@ -26,8 +26,8 @@ AMainCharacter::AMainCharacter()
 
 	bUseControllerRotationYaw = false;
 
-	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(RootComponent);
+	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));	//создаётсяы объект USpringArmComponent и называется CameraBoom
+	CameraBoom->SetupAttachment(RootComponent);	//через -> вызываются функции и переменные объекта под указателем. Закрепляем спрингарм на персонаже
 	CameraBoom->TargetArmLength = CameraDistance;
 	CameraBoom->bUsePawnControlRotation = true;
 
@@ -63,14 +63,16 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAxis("MouseX", this, &APawn::AddControllerYawInput);
+	//оси и кнопки задаются в настройках проекта в движке
+
+	PlayerInputComponent->BindAxis("MouseX", this, &APawn::AddControllerYawInput);	//берём информацию оси и передаём её в функцию
 	PlayerInputComponent->BindAxis("MouseY", this, &APawn::AddControllerPitchInput);
 	
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AMainCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AMainCharacter::MoveRight);
 
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AMainCharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AMainCharacter::Jump);	//проверяем нажатие кнопки и выполняем функцию
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &AMainCharacter::StopJumping);
 
 	PlayerInputComponent->BindAction("Ability1", IE_Pressed, this, &AMainCharacter::Ability1);
@@ -82,9 +84,9 @@ void AMainCharacter::MoveForward(float Axis)
 	if ((Controller != NULL) && (bCanMove) && (Axis != 0.0f)) {
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRot(0, Rotation.Yaw, 0);
-		const FVector Dir = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);
+		const FVector Dir = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);	//определяем направление камеры по оси Х
 
-		AddMovementInput(Dir, Axis);
+		AddMovementInput(Dir, Axis); //перемещаем персонажа
 	}
 }
 
@@ -93,7 +95,7 @@ void AMainCharacter::MoveRight(float Axis)
 	if (Controller != NULL && bCanMove && Axis != 0.0f) {
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRot(0, Rotation.Yaw, 0);
-		const FVector Dir = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y);
+		const FVector Dir = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y); //определяем направление камеры по оси Y
 
 		AddMovementInput(Dir, Axis);
 	}

@@ -15,8 +15,8 @@ public:
 	// Sets default values for this character's properties
 	AMainCharacter();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
-	class USpringArmComponent* CameraBoom;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)  //используется с компонентами, указателями на объекты. В противном случае, возможны вылеты
+	class USpringArmComponent* CameraBoom;	//указатель используется с компонентами и с объектами в другом классе. Не копируют объект целиком, что экономит память
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	class UCameraComponent* MainCamera;
