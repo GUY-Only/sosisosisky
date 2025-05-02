@@ -17,7 +17,7 @@ AMainCharacter::AMainCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 
 	CameraDistance = 400.0f;
-	Sens = 0.05f;
+	RotationRate = 1000.0f;
 	JumpVel = 700.0f;
 	MaxSpeed = 400.0f;
 
@@ -36,7 +36,7 @@ AMainCharacter::AMainCharacter()
 	MainCamera->bUsePawnControlRotation = false;
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->RotationRate = FRotator(0.0f,540.0f,0.0f);
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, RotationRate,0.0f);
 	GetCharacterMovement()->JumpZVelocity = JumpVel;
 	GetCharacterMovement()->AirControl = 0.2f;
 	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;

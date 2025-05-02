@@ -28,7 +28,7 @@ public:
 	void Ability1();
 
 	float CameraDistance;
-	float Sens;
+	float RotationRate;
 	float JumpVel;
 	float MaxSpeed;
 
