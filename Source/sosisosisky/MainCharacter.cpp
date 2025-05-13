@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Engine/World.h"
 
 
 // Sets default values
@@ -42,6 +43,18 @@ AMainCharacter::AMainCharacter()
 	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
 	GetCharacterMovement()->SetWalkableFloorAngle(60);
 
+	// Точка спавна костянного снаряда
+	ChargingOrigin = CreateDefaultSubobject<USceneComponent>(TEXT("ChargingOrigin"));
+	ChargingOrigin->SetupAttachment(RootComponent);
+	ChargingOrigin->SetRelativeLocation(FVector(0, 0, 100));
+
+	// Визуализация костянного снаряда при зарядке
+	ChargingMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ChargingMesh"));
+	ChargingMesh->SetupAttachment(ChargingOrigin);
+	ChargingMesh->SetRelativeLocation(FVector::ZeroVector);
+	ChargingMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	ChargingMesh->SetVisibility(false);
+
 }
 
 // Called when the game starts or when spawned
@@ -55,6 +68,80 @@ void AMainCharacter::BeginPlay()
 void AMainCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (bIsBoneProjectileCharging)
+	{
+
+		GetCharacterMovement()->MaxWalkSpeed = MaxSpeed/2;
+
+		// Увеличиваем время зарядки, максимум до 3 секунд (3 стадии)
+		CurrentChargeTime = FMath::Min(CurrentChargeTime + DeltaTime, 3.f);
+
+		// Вычисляем стадию: каждая секунда — новая
+		int32 NewStage;
+		if (CurrentChargeTime < StageTime) NewStage = 1;
+		else NewStage = FMath::Clamp(int32(CurrentChargeTime / StageTime), 1, 3);
+
+		// Если стадия изменилась — обновляем визуал
+		if (NewStage != CurrentVisualStage)
+		{
+			CurrentVisualStage = NewStage;
+
+			if (BoneProjectileClass)
+			{
+				ABoneProjectile* DefaultProj = BoneProjectileClass.GetDefaultObject();
+				UStaticMesh* NewMesh = nullptr;
+
+				// Выбираем нужный меш по стадии
+				switch (CurrentVisualStage)
+				{
+				case 1: NewMesh = DefaultProj->MeshStage1; break;
+				case 2: NewMesh = DefaultProj->MeshStage2; break;
+				case 3: NewMesh = DefaultProj->MeshStage3; break;
+				}
+
+				// Если нашли меш — меняем его
+				if (NewMesh)
+				{
+					ChargingMesh->SetStaticMesh(NewMesh);
+				}
+			}
+		}
+
+		// Анимция появления при зарядке первой стадии
+
+		if (CurrentChargeTime < StageTime)
+		{
+			
+			/* Линейное масштабирование 
+			* 
+			float Scale = CurrentChargeTime / StageTime;		
+			ChargingMesh->SetWorldScale3D(FVector(Scale));*/
+
+
+			// Плавное масштабирование по кривой
+
+			float Alpha = CurrentChargeTime / StageTime;
+			float Eased = FMath::InterpEaseInOut(0.f, Scale, Alpha, 2.f);
+			ChargingMesh->SetWorldScale3D(FVector(Eased));
+		}
+		else
+		{
+			// После первой секунды оставляем нормальный размер
+			ChargingMesh->SetWorldScale3D(FVector(Scale));
+		}
+
+		// Если кнопку отпустили раньше времени, всё равно ждём 
+
+		if (bIsButtonReleasedEarly && CurrentChargeTime >= StageTime) {
+
+			bIsButtonReleasedEarly = false;
+			bIsBoneProjectileCharging = false;
+
+			ChargingMesh->SetVisibility(false);
+			SpawnChargedBoneProjectile();
+		}
+	}else GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
 
 }
 
@@ -75,7 +162,8 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AMainCharacter::Jump);	//проверяем нажатие кнопки и выполняем функцию
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &AMainCharacter::StopJumping);
 
-	PlayerInputComponent->BindAction("Ability1", IE_Pressed, this, &AMainCharacter::Ability1);
+	PlayerInputComponent->BindAction("Ability1", IE_Pressed, this, &AMainCharacter::ChargingBoneProjectilePressed);
+	PlayerInputComponent->BindAction("Ability1", IE_Released, this, &AMainCharacter::ChargingBoneProjectileReleased);
 }
 
 
@@ -111,7 +199,81 @@ void AMainCharacter::StopJumping()
 	if (Controller != NULL) ACharacter::StopJumping();
 }
 
-void AMainCharacter::Ability1()
+
+//Абилки
+
+void AMainCharacter::Ability1Pressed()		//Задел на будущее на случай добавления новых абилок и их переключения
 {
-	ACharacter::Jump();
+	ChargingBoneProjectilePressed();
+}
+
+void AMainCharacter::Ability1Released()
+{
+	ChargingBoneProjectileReleased();
+}
+
+
+//Снаряд
+
+void AMainCharacter::ChargingBoneProjectilePressed()
+{
+	if (!bIsBoneProjectileCharging)
+	{
+		bIsBoneProjectileCharging = true;
+		CurrentChargeTime = 0.f;
+
+		CurrentVisualStage = 1; // начинаем с первой стадии
+
+		// Получаем меш первой стадии из дефолтного объекта снаряда
+		if (BoneProjectileClass)
+		{
+			ABoneProjectile* DefaultProj = BoneProjectileClass.GetDefaultObject();
+			if (DefaultProj && DefaultProj->MeshStage1)
+			{
+				ChargingMesh->SetStaticMesh(DefaultProj->MeshStage1);
+			}
+		}
+
+		// Показываем меш над головой
+		ChargingMesh->SetVisibility(true);
+	}
+}
+
+void AMainCharacter::ChargingBoneProjectileReleased()
+{
+	if (CurrentChargeTime < StageTime) {
+		bIsButtonReleasedEarly = true;
+	}
+	else
+	{
+		bIsBoneProjectileCharging = false;
+		ChargingMesh->SetVisibility(false);
+		SpawnChargedBoneProjectile();
+	}
+}
+
+void AMainCharacter::SpawnChargedBoneProjectile()
+{
+	if (!BoneProjectileClass) return;
+
+	// Определяем стадию: 0–2 сек - Stage=1, 2–3 сек - Stage=2, 3+ сек - Stage=3	
+	int32 Stage;
+	if (CurrentChargeTime < StageTime) Stage = 1;
+	else Stage = FMath::Clamp(int32(CurrentChargeTime / StageTime), 1, 3);
+
+	// Позиция над головой: можно взять Socket в скелете или просто смещение
+	FVector SpawnLoc = ChargingOrigin->GetComponentLocation();
+	FRotator SpawnRot = GetControlRotation();
+
+	FActorSpawnParameters Params;
+	Params.Instigator = this;
+	Params.Owner = this;
+
+	ABoneProjectile* Proj = GetWorld()->SpawnActor<ABoneProjectile>(
+		BoneProjectileClass, SpawnLoc, SpawnRot, Params);
+
+	if (Proj)
+	{
+		Proj->InitCharge(Stage, SpawnRot.Vector());
+	}
 }

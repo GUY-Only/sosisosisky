@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/ProjectileMovementComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "BoneProjectile.generated.h"
 
 UCLASS()
@@ -15,17 +17,49 @@ public:
 	// Sets default values for this actor's properties
 	ABoneProjectile();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UStaticMeshComponent* MeshComponent;
+	void InitCharge(int32 InStage, const FVector& Direction);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UBoxComponent* TriggerComponent;
+    UPROPERTY(VisibleAnywhere)
+    UStaticMeshComponent* MeshComp;
 
-	float Speed = 500.0f;
+    /** Компонент движения */
+    UPROPERTY(VisibleAnywhere)
+    UProjectileMovementComponent* ProjectileMovement;
 
+    /** Стадия заряда (1,2 или 3) */
+    int32 Stage;
 
-	UFUNCTION()
-	void Triggered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+    /** Урон для каждой стадии */
+    UPROPERTY(EditDefaultsOnly, Category = "My Settings Damage")
+    float DamageStage1 = 10.f;
+    UPROPERTY(EditDefaultsOnly, Category = "My Settings Damage")
+    float DamageStage2 = 25.f;
+    UPROPERTY(EditDefaultsOnly, Category = "My Settings Damage")
+    float DamageStage3 = 50.f;
+
+    // Скорость полёта снаряда в UU в секунду (1 UU = 1 см)
+    UPROPERTY(EditDefaultsOnly, Category = "My Settings Physics")
+    float Speed = 2000.f; 
+
+    UPROPERTY(EditDefaultsOnly, Category = "My Settings Physics")
+    float Scale = 0.1f;
+
+    UPROPERTY(EditDefaultsOnly, Category = "My Settings Physics")
+    float Gravity = 0.1f;
+
+    /** Меши для каждой стадии */
+    UPROPERTY(EditDefaultsOnly, Category = "My Settings Visual")
+    UStaticMesh* MeshStage1;
+    UPROPERTY(EditDefaultsOnly, Category = "My Settings Visual")
+    UStaticMesh* MeshStage2;
+    UPROPERTY(EditDefaultsOnly, Category = "My Settings Visual")
+    UStaticMesh* MeshStage3;
+
+    /** Обработчик столкновений */
+    UFUNCTION()
+    void OnHit(UPrimitiveComponent* HitComp, AActor* Other,
+        UPrimitiveComponent* OtherComp, FVector NormalImpulse,
+        const FHitResult& Hit);
 
 protected:
 	// Called when the game starts or when spawned
