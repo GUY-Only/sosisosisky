@@ -2,7 +2,9 @@
 
 
 #include "TestEnemy.h"
-#include "Kismet/GameplayStatics.h"            // если понадобятся ApplyXXX
+#include "Components/SkeletalMeshComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Kismet/GameplayStatics.h"            
 
 // Sets default values
 ATestEnemy::ATestEnemy()
@@ -10,9 +12,12 @@ ATestEnemy::ATestEnemy()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
-	MeshComp->SetupAttachment(RootComponent);
+	CapsuleComp = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComp"));
+	//RootComponent = CapsuleComp;
+	CapsuleComp->SetupAttachment(RootComponent);
 
+	SkeletalMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComp"));
+	SkeletalMeshComp->SetupAttachment(CapsuleComp);
 }
 
 // Called when the game starts or when spawned

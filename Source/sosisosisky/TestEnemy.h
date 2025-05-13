@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/StaticMeshComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "TestEnemy.generated.h"
 
 UCLASS()
@@ -17,7 +17,10 @@ public:
 	ATestEnemy();
 
     UPROPERTY(VisibleAnywhere)
-    UStaticMeshComponent* MeshComp;
+    USkeletalMeshComponent* SkeletalMeshComp;
+
+    UPROPERTY(VisibleAnywhere)
+    UCapsuleComponent* CapsuleComp;
 
 protected:
 	// Called when the game starts or when spawned
