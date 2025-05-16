@@ -197,7 +197,6 @@ void AMainCharacter::MoveRight(float Axis)
 void AMainCharacter::Jump()
 {
 	if (Controller != NULL && bCanMove) ACharacter::Jump();
-	UE_LOG(LogTemp, Log, TEXT("Hide UI"));
 }
 
 void AMainCharacter::StopJumping()
@@ -354,7 +353,6 @@ void AMainCharacter::TraceForInteractables()
 // Вызов взаимодействия
 void AMainCharacter::Interact()
 {
-
 	if (CurrentInteractable && CurrentInteractable->Implements<UInteractionInterface>())
 	{
 		IInteractionInterface::Execute_OnInteract(CurrentInteractable, this);

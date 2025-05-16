@@ -97,7 +97,7 @@ public:
 	AActor* CurrentInteractable;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Settings Interaction")
-	float RayDistance = 100.f;
+	float RayDistance = 500.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Settings Interaction")
 	TArray<TSubclassOf<AActor>> IgnoreActorClasses;
