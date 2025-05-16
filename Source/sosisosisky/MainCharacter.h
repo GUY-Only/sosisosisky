@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "BoneProjectile.h"
+#include "InteractionInterface.h"
 #include "MainCharacter.generated.h"
 
 UCLASS()
@@ -15,6 +16,7 @@ class SOSISOSISKY_API AMainCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AMainCharacter();
+
 
 
 	// Камера
@@ -29,6 +31,7 @@ public:
 	float RotationRate;
 
 
+
 	// Передвижение
 
 	void MoveForward(float Axis);
@@ -41,6 +44,7 @@ public:
 	float MaxSpeed;
 
 	bool bCanMove;
+
 
 
 	// Абилки
@@ -83,6 +87,20 @@ public:
 	void SpawnChargedBoneProjectile();
 
 
+
+	//Взаимодействие
+
+	void TraceForInteractables();
+	void Interact();
+	void ShowInteractionUI(const FString& InteractionText);
+	void HideInteractionUI();
+	AActor* CurrentInteractable;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Settings Interaction")
+	float RayDistance = 100.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Settings Interaction")
+	TArray<TSubclassOf<AActor>> IgnoreActorClasses;
 
 protected:
 	// Called when the game starts or when spawned

@@ -48,6 +48,9 @@ public:
 	  UFUNCTION()
 	  void ReleaseButton();
 
+	  UFUNCTION()
+	  void Ineraction();
+
 private: 
 	FVector GStartLocation;
 	FVector GTargetLocation;

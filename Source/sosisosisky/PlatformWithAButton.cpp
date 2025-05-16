@@ -105,3 +105,11 @@ void APlatformWithAButton::ReleaseButton()
 	}
 	bCanPressAgain = true;
 }
+
+void APlatformWithAButton::Ineraction()
+{
+	if (bCanPressAgain) {
+		bMoving = true;
+		PressButton();
+	}
+}
