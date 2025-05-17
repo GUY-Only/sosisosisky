@@ -64,7 +64,6 @@ AMainCharacter::AMainCharacter()
 void AMainCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
@@ -296,8 +295,19 @@ void AMainCharacter::TraceForInteractables()
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
 
+	//DrawDebugSphere(GetWorld(), End, RayRadius, 12, FColor::Green, true, 0.1f);	Дебаг сфера на конце луча с его радиусом.
+
 	TArray<FHitResult> Hits;
-	bool bHit = GetWorld()->LineTraceMultiByChannel(Hits, Start, End, ECC_Visibility, Params);
+	// bool bHit = GetWorld()->LineTraceMultiByChannel(Hits, Start, End, ECC_Visibility, Params);  тонкий луч
+	bool bHit = GetWorld()->SweepMultiByChannel(
+		Hits,
+		Start,
+		End,
+		FQuat::Identity,
+		ECC_Visibility,
+		FCollisionShape::MakeSphere(RayRadius),
+		Params
+	);
 
 	AActor* ValidInteractable = nullptr;
 

@@ -98,6 +98,8 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Settings Interaction")
 	float RayDistance = 500.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Settings Interaction")
+	float RayRadius = 30.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Settings Interaction")
 	TArray<TSubclassOf<AActor>> IgnoreActorClasses;
