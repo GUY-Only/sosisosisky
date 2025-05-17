@@ -27,6 +27,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction")
 	FString InteractionText;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
+	class UWidgetComponent* InteractionWidget;
+
 	virtual void OnInteract_Implementation(AActor* Caller) override;
 	virtual FString GetInteractionText_Implementation() const override;
 };
