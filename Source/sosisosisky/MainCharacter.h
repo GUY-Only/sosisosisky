@@ -95,6 +95,7 @@ public:
 	void ShowInteractionUI(const FString& InteractionText);
 	void HideInteractionUI();
 	AActor* CurrentInteractable;
+	AActor* PreviousInteractable;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Settings Interaction")
 	float RayDistance = 500.f;

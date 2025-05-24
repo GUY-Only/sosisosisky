@@ -11,6 +11,7 @@
 #include "InteractionInterface.h"
 #include "Engine/World.h"
 #include "UObject/Interface.h"
+#include "InteractableActor.h"
 
 
 // Sets default values
@@ -25,6 +26,7 @@ AMainCharacter::AMainCharacter()
 	MaxSpeed = 400.0f;
 
 	CurrentInteractable = nullptr;
+	PreviousInteractable = nullptr;
 
 	bCanMove = true;
 
@@ -372,9 +374,19 @@ void AMainCharacter::Interact()
 void AMainCharacter::ShowInteractionUI(const FString& InteractionText)
 {
 	UE_LOG(LogTemp, Log, TEXT("Show UI: %s"), *InteractionText);
+	PreviousInteractable = CurrentInteractable;
+	if (auto* IA = Cast<AInteractableActor>(CurrentInteractable))
+	{
+		IA->ShowUI();
+	}
 }
 
 void AMainCharacter::HideInteractionUI()
 {
 	UE_LOG(LogTemp, Log, TEXT("Hide UI"));
+	if (auto* IA = Cast<AInteractableActor>(PreviousInteractable))
+	{
+		IA->HideUI();
+	}
+
 }

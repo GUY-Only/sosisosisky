@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "InteractionInterface.h"
+#include "Components/WidgetComponent.h"
 #include "InteractableActor.generated.h"
 
 UCLASS()
@@ -20,6 +21,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -32,4 +34,12 @@ public:
 
 	virtual void OnInteract_Implementation(AActor* Caller) override;
 	virtual FString GetInteractionText_Implementation() const override;
+
+	FKey GetFirstKeyForAction(APlayerController* PlayerController, const FName& ActionName);
+
+	void ShowUI();
+	void HideUI();
+
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	void UpdateInteractionText();
 };
