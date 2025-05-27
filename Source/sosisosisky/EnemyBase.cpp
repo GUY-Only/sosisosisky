@@ -9,16 +9,13 @@
 AEnemyBase::AEnemyBase()
 {
     PrimaryActorTick.bCanEverTick = true;
-    bIsDead = false;
 
-    // Плавный разворот в направлении движения
+    // Movement setup
     bUseControllerRotationYaw = false;
-    GetCharacterMovement()->bUseControllerDesiredRotation = true;
-    GetCharacterMovement()->bOrientRotationToMovement = true;
-    GetCharacterMovement()->RotationRate = FRotator(0, 180.f, 0); //180 градусов в секунду - скорость разворота
-
-    DefaultSpeed = 300.f;
-    GetCharacterMovement()->MaxWalkSpeed = DefaultSpeed;
+    GetCharacterMovement()->bOrientRotationToMovement = false; // we handle rotation manually
+    GetCharacterMovement()->bUseControllerDesiredRotation = false;
+    GetCharacterMovement()->RotationRate = FRotator(0.f, 120.f, 0.f);
+    GetCharacterMovement()->MaxWalkSpeed = 300.f;
 }
 
 void AEnemyBase::BeginPlay()
@@ -41,6 +38,9 @@ float AEnemyBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent
     if (CurrentHealth <= 0.f)
     {
         bIsDead = true;
+        bIsRotating = false;
+        bIsMoving = false;
+        GetWorldTimerManager().ClearTimer(RoamTimerHandle);
         if (AAIController* AICon = Cast<AAIController>(GetController()))
         {
             AICon->StopMovement();
@@ -56,33 +56,41 @@ float AEnemyBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent
 void AEnemyBase::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+    if (bIsDead)
+        return;
 
-    if (bIsDead) return;
-
-    if (AAIController* AICon = Cast<AAIController>(GetController()))
+    if (bIsRotating)
     {
-        // Если мы уже не в пути — ставим таймер на новую рум-точку
-        if (AICon->GetMoveStatus() != EPathFollowingStatus::Moving
-            && !GetWorldTimerManager().IsTimerActive(RespawnTimerHandle))
+        // Interpolate rotation toward desired
+        FRotator Current = GetActorRotation();
+        FRotator NewRot = FMath::RInterpConstantTo(Current, DesiredRotation, DeltaTime, GetCharacterMovement()->RotationRate.Yaw);
+        SetActorRotation(NewRot);
+        if (NewRot.Equals(DesiredRotation, 1.f))
         {
-            // используем отдельный таймер для роуминга
-            GetWorldTimerManager().SetTimer(
-                RespawnTimerHandle,              // можно создать новый FTimerHandle, 
-                // но здесь переиспользуем один для простоты
-                this,
-                &AEnemyBase::RoamToRandomPoint,
-                RoamPauseTime,
-                false
-            );
+            bIsRotating = false;
+            StartMove();
+        }
+    }
+    else if (bIsMoving)
+    {
+        if (AAIController* AICon = Cast<AAIController>(GetController()))
+        {
+            if (AICon->GetMoveStatus() != EPathFollowingStatus::Moving)
+            {
+                bIsMoving = false;
+                // Pause before next roam
+                GetWorldTimerManager().SetTimer(RoamTimerHandle, this, &AEnemyBase::RoamToRandomPoint, RoamPauseTime, false);
+            }
         }
     }
 }
 
 void AEnemyBase::RoamToRandomPoint()
 {
-    GetWorldTimerManager().ClearTimer(RespawnTimerHandle);
     if (bIsDead)
         return;
+
+    GetWorldTimerManager().ClearTimer(RoamTimerHandle);
 
     UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
     if (!NavSys)
@@ -91,10 +99,19 @@ void AEnemyBase::RoamToRandomPoint()
     FNavLocation RandomPoint;
     if (NavSys->GetRandomPointInNavigableRadius(SpawnLocation, RoamRadius, RandomPoint))
     {
-        if (AAIController* AICon = Cast<AAIController>(GetController()))
-        {
-            AICon->MoveToLocation(RandomPoint.Location, AcceptanceRadius, true, true, true, false, 0, true);
-        }
+        NextMoveLocation = RandomPoint.Location;
+        DesiredRotation = (NextMoveLocation - GetActorLocation()).Rotation();
+        bIsRotating = true;
+        bIsMoving = false;
+    }
+}
+
+void AEnemyBase::StartMove()
+{
+    if (AAIController* AICon = Cast<AAIController>(GetController()))
+    {
+        bIsMoving = true;
+        AICon->MoveToLocation(NextMoveLocation, AcceptanceRadius, true, true, true, false, 0, true);
     }
 }
 
