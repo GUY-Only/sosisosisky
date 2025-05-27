@@ -24,7 +24,7 @@ AInteractableActor::AInteractableActor()
 	InteractionWidget->SetDrawAtDesiredSize(true);
 
 	static ConstructorHelpers::FClassFinder<UUserWidget> WidgetBPClass(
-		TEXT("/Game/Interactables/WBP_InteractionHint")
+		TEXT("/Game/UI/WBP_InteractionHint")
 	);
 	if (WidgetBPClass.Class)
 	{

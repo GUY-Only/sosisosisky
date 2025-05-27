@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Components/WidgetComponent.h"
 #include "EnemyBase.generated.h"
 
 UCLASS()
@@ -32,6 +33,9 @@ protected:
 
     // Patrol settings
     UPROPERTY(EditAnywhere, Category = "Enemy|Movement")
+    bool bIsRoaming = false;
+
+    UPROPERTY(EditAnywhere, Category = "Enemy|Movement")
     float AcceptanceRadius = 50.f;
 
     UPROPERTY(EditAnywhere, Category = "Enemy|Movement")
@@ -40,18 +44,34 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Enemy|Movement")
     float RoamPauseTime = 2.f;
 
+    float CurrentPercent;         
+    float DelayedPercent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|UI")
+    UWidgetComponent* HealthBarWidget;
+
     // Movement state
     bool bIsDead = false;
     bool bIsRotating = false;
     bool bIsMoving = false;
+    bool bIsDelaying = false;
+    bool bIsLerping = false;
 
     FVector SpawnLocation;
     FVector NextMoveLocation;
     FRotator DesiredRotation;
     FTimerHandle RoamTimerHandle;
+    FTimerHandle DelayTimerHandle;
 
     // Core functions
     void RoamToRandomPoint();      // setup next location + rotation
     void StartMove();             // actually start MoveToLocation
     void Respawn();
+    void UpdateHealthBar();
+    void StartDelayedLerp();
+
+private:
+    FTimerHandle HealthBarTimerHandle;
+    void HideHealthBar();
+    void ShowHealthBar();
 };
