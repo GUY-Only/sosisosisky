@@ -19,19 +19,16 @@ protected:
         AController* EventInstigator, AActor* DamageCauser) override;
     virtual void Tick(float DeltaTime) override;
 
-    // Stats
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Stats")
     float MaxHealth = 100.f;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|Stats")
     float CurrentHealth;
 
-    // Respawn
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Respawn")
     float RespawnDelay = 15.f;
     FTimerHandle RespawnTimerHandle;
 
-    // Patrol settings
     UPROPERTY(EditAnywhere, Category = "Enemy|Movement")
     bool bIsRoaming = false;
 
@@ -49,8 +46,7 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|UI")
     UWidgetComponent* HealthBarWidget;
-
-    // Movement state
+    
     bool bIsDead = false;
     bool bIsRotating = false;
     bool bIsMoving = false;
@@ -63,9 +59,8 @@ protected:
     FTimerHandle RoamTimerHandle;
     FTimerHandle DelayTimerHandle;
 
-    // Core functions
-    void RoamToRandomPoint();      // setup next location + rotation
-    void StartMove();             // actually start MoveToLocation
+    void RoamToRandomPoint();    
+    void StartMove();            
     void Respawn();
     void UpdateHealthBar();
     void StartDelayedLerp();

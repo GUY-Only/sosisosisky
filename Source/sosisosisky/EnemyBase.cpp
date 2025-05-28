@@ -12,9 +12,8 @@ AEnemyBase::AEnemyBase()
 {
     PrimaryActorTick.bCanEverTick = true;
 
-    // Movement setup
     bUseControllerRotationYaw = false;
-    GetCharacterMovement()->bOrientRotationToMovement = false; // we handle rotation manually
+    GetCharacterMovement()->bOrientRotationToMovement = false;
     GetCharacterMovement()->bUseControllerDesiredRotation = false;
     GetCharacterMovement()->RotationRate = FRotator(0.f, 120.f, 0.f);
     GetCharacterMovement()->MaxWalkSpeed = 300.f;
@@ -64,7 +63,6 @@ float AEnemyBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent
     bIsDelaying = true;
     bIsLerping = false;
 
-    // запускаем задержку 1 секунда
     GetWorldTimerManager().SetTimer(DelayTimerHandle, this,
         &AEnemyBase::StartDelayedLerp, 1.f, false);
 
@@ -79,7 +77,6 @@ float AEnemyBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent
             AICon->StopMovement();
         }
         SetActorEnableCollision(false);
-        //SetActorHiddenInGame(true);
         GetMesh()->SetVisibility(false);
         GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &AEnemyBase::Respawn, RespawnDelay, false);
     }
@@ -120,7 +117,6 @@ void AEnemyBase::Tick(float DeltaTime)
         if (bIsRoaming) {
             if (bIsRotating)
             {
-                // Interpolate rotation toward desired
                 FRotator Current = GetActorRotation();
                 FRotator NewRot = FMath::RInterpConstantTo(Current, DesiredRotation, DeltaTime, GetCharacterMovement()->RotationRate.Yaw);
                 SetActorRotation(NewRot);
@@ -137,14 +133,12 @@ void AEnemyBase::Tick(float DeltaTime)
                     if (AICon->GetMoveStatus() != EPathFollowingStatus::Moving)
                     {
                         bIsMoving = false;
-                        // Pause before next roam
                         GetWorldTimerManager().SetTimer(RoamTimerHandle, this, &AEnemyBase::RoamToRandomPoint, RoamPauseTime, false);
                     }
                 }
             }
         }
     }
-
     
 }
 
@@ -163,7 +157,15 @@ void AEnemyBase::RoamToRandomPoint()
     if (NavSys->GetRandomPointInNavigableRadius(SpawnLocation, RoamRadius, RandomPoint))
     {
         NextMoveLocation = RandomPoint.Location;
-        DesiredRotation = (NextMoveLocation - GetActorLocation()).Rotation();
+
+        //DesiredRotation = (NextMoveLocation - GetActorLocation()).Rotation();
+        FVector Dir = NextMoveLocation - GetActorLocation();
+        Dir.Z = 0;  
+        if (!Dir.IsNearlyZero())
+            DesiredRotation = Dir.Rotation();
+        DesiredRotation.Pitch = 0;
+        DesiredRotation.Roll = 0;
+
         bIsRotating = true;
         bIsMoving = false;
     }
@@ -194,7 +196,6 @@ void AEnemyBase::UpdateHealthBar()
 {
     if (UUserWidget* Widget = HealthBarWidget->GetUserWidgetObject())
     {
-        // Предполагаем, что в виджете есть ProgressBar с именем "HealthBar"
         if (UProgressBar* Bar = Cast<UProgressBar>(Widget->GetWidgetFromName(TEXT("HealthBar"))))
         {
             Bar->SetPercent(CurrentHealth / MaxHealth);
@@ -212,9 +213,8 @@ void AEnemyBase::ShowHealthBar()
     if (HealthBarWidget)
     {
         HealthBarWidget->SetVisibility(true);
-        // Сбрасываем предыдущий таймер
+        
         GetWorldTimerManager().ClearTimer(HealthBarTimerHandle);
-        // Ставим таймер на скрытие через 10 секунд
         GetWorldTimerManager().SetTimer(
             HealthBarTimerHandle,
             this,
