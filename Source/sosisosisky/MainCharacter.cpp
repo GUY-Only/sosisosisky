@@ -110,6 +110,9 @@ void AMainCharacter::Tick(float DeltaTime)
 			}
 		}
 
+		FRotator ProjDirection = FRotationMatrix::MakeFromX(MainCamera->GetForwardVector()).Rotator();
+		ChargingMesh->SetWorldRotation(ProjDirection);
+
 		// Анимция появления при зарядке первой стадии
 
 		if (CurrentChargeTime < StageTime)
