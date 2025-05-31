@@ -71,7 +71,7 @@ public:
 	int32 CurrentVisualStage = 1;
 
 	UPROPERTY(EditAnywhere, Category = "My Settings BoneProjectile")
-	float Scale = 0.1f;
+	float Scale = 1f;
 
 	bool bIsBoneProjectileCharging = false;
 	bool bIsButtonReleasedEarly = false;
