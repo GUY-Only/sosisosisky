@@ -41,6 +41,10 @@
 		{
 			"Name": "RigLogicMutable",
 			"Enabled": true
+		},
+		{
+			"Name": "NiagaraFluids",
+			"Enabled": true
 		}
 	]
 }
