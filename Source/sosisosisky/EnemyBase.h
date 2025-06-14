@@ -44,6 +44,12 @@ protected:
     float CurrentPercent;         
     float DelayedPercent;
 
+    UPROPERTY(EditAnywhere, Category = "Enemy|Bounty")
+    int BoneBounty = 20;
+
+    UPROPERTY(EditAnywhere, Category = "Enemy|Bounty")
+    int SoulBounty = 1;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|UI")
     UWidgetComponent* HealthBarWidget;
     

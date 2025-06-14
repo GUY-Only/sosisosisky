@@ -26,9 +26,10 @@ ABoneProjectile::ABoneProjectile()
 
 }
 
-void ABoneProjectile::InitCharge(int32 InStage, const FVector& Direction)
+void ABoneProjectile::InitCharge(int32 InStage, const FVector& Direction, AActor* ProjOwner)
 {
     Stage = InStage;
+    Owner = ProjOwner;
 
     // ћеш по стадии
     switch (Stage)
@@ -62,7 +63,7 @@ void ABoneProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Other, UPrimit
         }
 
         UGameplayStatics::ApplyPointDamage(Other, Damage, GetVelocity().GetSafeNormal(),
-            Hit, GetInstigatorController(), this, nullptr);
+            Hit, GetInstigatorController(), Owner, nullptr);
     }
 
     // ”ничтожаемс€ при любом столкновении

@@ -7,6 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/ProgressBar.h"
+#include "MainCharacter.h"
 
 AEnemyBase::AEnemyBase()
 {
@@ -79,6 +80,12 @@ float AEnemyBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent
         SetActorEnableCollision(false);
         GetMesh()->SetVisibility(false);
         GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &AEnemyBase::Respawn, RespawnDelay, false);
+
+        if (auto* MC = Cast<AMainCharacter>(DamageCauser))
+        {
+            MC->AddResources(EResourceType::Bone, BoneBounty);
+            MC->AddResources(EResourceType::Soul, SoulBounty);
+        }
     }
 
     return DamageApplied;

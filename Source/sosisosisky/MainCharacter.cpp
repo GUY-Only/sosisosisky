@@ -11,6 +11,7 @@
 #include "InteractionInterface.h"
 #include "Engine/World.h"
 #include "UObject/Interface.h"
+#include "Components/TextBlock.h"
 #include "InteractableActor.h"
 
 
@@ -60,6 +61,48 @@ AMainCharacter::AMainCharacter()
 	ChargingMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	ChargingMesh->SetVisibility(false);
 
+	// HUD
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> WidgetBPClass(
+		TEXT("/Game/UI/WBP_PlayerHUD")
+	);
+	APlayerController* PlayerController = GetController<APlayerController>();
+	if (WidgetBPClass.Class && PlayerController) PlayerHUDWidget = CreateWidget<UUserWidget>(PlayerController, WidgetBPClass.Class);
+	if (PlayerHUDWidget) PlayerHUDWidget->AddToViewport();
+}
+
+void AMainCharacter::AddResources(EResourceType Resource, int count)
+{
+	switch (Resource)
+	{
+	case EResourceType::Bone:
+		BoneCount += count;
+		break;
+
+	case EResourceType::Soul:
+		SoulCount += count;
+		break;
+
+	case EResourceType::None:
+	default:
+		break;
+	}
+
+	UpdateHUD();
+}
+
+void AMainCharacter::UpdateHUD()
+{
+	if (!PlayerHUDWidget) return;
+
+		if (UTextBlock* TB = Cast<UTextBlock>(PlayerHUDWidget->GetWidgetFromName(TEXT("Txt_BoneCounter"))))
+		{
+			TB->SetText(FText::AsNumber(BoneCount));
+		}
+		if (UTextBlock* TB = Cast<UTextBlock>(PlayerHUDWidget->GetWidgetFromName(TEXT("Txt_SoulCounter"))))
+		{
+			TB->SetText(FText::AsNumber(SoulCount));
+		}
 }
 
 // Called when the game starts or when spawned
@@ -283,7 +326,7 @@ void AMainCharacter::SpawnChargedBoneProjectile()
 
 	if (Proj)
 	{
-		Proj->InitCharge(Stage, SpawnRot.Vector());
+		Proj->InitCharge(Stage, SpawnRot.Vector(), this);
 	}
 }
 

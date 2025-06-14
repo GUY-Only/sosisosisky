@@ -6,7 +6,16 @@
 #include "GameFramework/Character.h"
 #include "BoneProjectile.h"
 #include "InteractionInterface.h"
+#include "Blueprint/UserWidget.h"
 #include "MainCharacter.generated.h"
+
+UENUM(BlueprintType)
+enum class EResourceType : uint8
+{
+	None,
+	Bone,
+	Soul
+};
 
 UCLASS()
 class SOSISOSISKY_API AMainCharacter : public ACharacter
@@ -88,7 +97,7 @@ public:
 
 
 
-	//Взаимодействие
+	// Взаимодействие
 
 	void TraceForInteractables();
 	void Interact();
@@ -104,6 +113,25 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Settings Interaction")
 	TArray<TSubclassOf<AActor>> IgnoreActorClasses;
+
+
+
+	// Ресурсы
+
+	int BoneCount = 0;
+	int SoulCount = 0;
+
+	void AddResources(EResourceType Resource, int count);
+
+
+
+	// HUD
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	UUserWidget* PlayerHUDWidget;
+
+	void UpdateHUD();
+
 
 protected:
 	// Called when the game starts or when spawned

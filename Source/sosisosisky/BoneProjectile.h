@@ -17,7 +17,9 @@ public:
 	// Sets default values for this actor's properties
 	ABoneProjectile();
 
-	void InitCharge(int32 InStage, const FVector& Direction);
+	void InitCharge(int32 InStage, const FVector& Direction, AActor* ProjOwner);
+
+    AActor* Owner;
 
     UPROPERTY(VisibleAnywhere)
     UStaticMeshComponent* MeshComp;
