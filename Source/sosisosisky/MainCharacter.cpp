@@ -63,12 +63,20 @@ AMainCharacter::AMainCharacter()
 
 	// HUD
 
-	static ConstructorHelpers::FClassFinder<UUserWidget> WidgetBPClass(
+	/*static ConstructorHelpers::FClassFinder<UUserWidget> WidgetBPClass(
 		TEXT("/Game/UI/WBP_PlayerHUD")
 	);
 	APlayerController* PlayerController = GetController<APlayerController>();
 	if (WidgetBPClass.Class && PlayerController) PlayerHUDWidget = CreateWidget<UUserWidget>(PlayerController, WidgetBPClass.Class);
 	if (PlayerHUDWidget) PlayerHUDWidget->AddToViewport();
+	if (PlayerHUDWidget) UE_LOG(LogTemp, Log, TEXT("SSSSSSSS"));*/
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> WidgetBPClass(TEXT("/Game/UI/WBP_PlayerHUD"));
+
+	if (WidgetBPClass.Succeeded())
+	{
+		PlayerHUDClass = WidgetBPClass.Class;
+	}
 }
 
 void AMainCharacter::AddResources(EResourceType Resource, int count)
@@ -109,6 +117,20 @@ void AMainCharacter::UpdateHUD()
 void AMainCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (PlayerHUDClass)
+	{
+		APlayerController* PlayerController = GetController<APlayerController>();
+		if (PlayerController)
+		{
+			PlayerHUDWidget = CreateWidget<UUserWidget>(PlayerController, PlayerHUDClass);
+
+			if (PlayerHUDWidget)
+			{
+				PlayerHUDWidget->AddToViewport();
+			}
+		}
+	}
 }
 
 // Called every frame
