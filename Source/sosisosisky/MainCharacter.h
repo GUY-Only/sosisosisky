@@ -127,6 +127,8 @@ public:
 
 	// HUD
 
+	TSubclassOf<UUserWidget> PlayerHUDClass;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
 	UUserWidget* PlayerHUDWidget;
 
