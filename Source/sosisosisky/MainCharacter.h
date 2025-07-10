@@ -12,7 +12,6 @@
 UENUM(BlueprintType)
 enum class EResourceType : uint8
 {
-	None,
 	Bone,
 	Soul
 };
@@ -85,6 +84,13 @@ public:
 	bool bIsBoneProjectileCharging = false;
 	bool bIsButtonReleasedEarly = false;
 
+	UPROPERTY(EditAnywhere, Category = "My Settings BoneProjectile")
+	int32 Stage1Cost = 0;
+	UPROPERTY(EditAnywhere, Category = "My Settings BoneProjectile")
+	int32 Stage2Cost = 10;
+	UPROPERTY(EditAnywhere, Category = "My Settings BoneProjectile")
+	int32 Stage3Cost = 25;
+
 	// Класс снаряда 
 	UPROPERTY(EditAnywhere, Category = "My Settings BoneProjectile")
 	TSubclassOf<class ABoneProjectile> BoneProjectileClass;
@@ -121,7 +127,13 @@ public:
 	int BoneCount = 0;
 	int SoulCount = 0;
 
-	void AddResources(EResourceType Resource, int count);
+	UFUNCTION(BlueprintCallable, Category = "My Character | Resources")
+	void AddResources(EResourceType ResourceType, int32 amount);
+	UFUNCTION(BlueprintPure, Category = "My Character | Resources")
+	bool RemoveResources(EResourceType ResourceType, int32 amount);
+	UFUNCTION(BlueprintPure, Category = "My Character | Resources")
+	int32 GetResourceCount(EResourceType ResourceType) const;
+
 
 
 
@@ -138,6 +150,10 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Character | Resources")
+	TMap<EResourceType, int32> Resources;
+
 
 public:	
 	// Called every frame

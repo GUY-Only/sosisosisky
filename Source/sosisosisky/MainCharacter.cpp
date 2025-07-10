@@ -77,41 +77,68 @@ AMainCharacter::AMainCharacter()
 	{
 		PlayerHUDClass = WidgetBPClass.Class;
 	}
-}
 
-void AMainCharacter::AddResources(EResourceType Resource, int count)
-{
-	switch (Resource)
-	{
-	case EResourceType::Bone:
-		BoneCount += count;
-		break;
-
-	case EResourceType::Soul:
-		SoulCount += count;
-		break;
-
-	case EResourceType::None:
-	default:
-		break;
-	}
-
-	UpdateHUD();
+	Resources.Add(EResourceType::Bone, 0);
+	Resources.Add(EResourceType::Soul, 0);
 }
 
 void AMainCharacter::UpdateHUD()
 {
 	if (!PlayerHUDWidget) return;
 
-		if (UTextBlock* TB = Cast<UTextBlock>(PlayerHUDWidget->GetWidgetFromName(TEXT("Txt_BoneCounter"))))
-		{
-			TB->SetText(FText::AsNumber(BoneCount));
-		}
-		if (UTextBlock* TB = Cast<UTextBlock>(PlayerHUDWidget->GetWidgetFromName(TEXT("Txt_SoulCounter"))))
-		{
-			TB->SetText(FText::AsNumber(SoulCount));
-		}
+	if (UTextBlock* TB = Cast<UTextBlock>(PlayerHUDWidget->GetWidgetFromName(TEXT("Txt_BoneCounter"))))
+	{
+		TB->SetText(FText::AsNumber(GetResourceCount(EResourceType::Bone)));
+	}
+	if (UTextBlock* TB = Cast<UTextBlock>(PlayerHUDWidget->GetWidgetFromName(TEXT("Txt_SoulCounter"))))
+	{
+		TB->SetText(FText::AsNumber(GetResourceCount(EResourceType::Soul)));
+	}
 }
+
+void AMainCharacter::AddResources(EResourceType ResourceType, int32 amount)
+{
+	int32* CurrentAmount = Resources.Find(ResourceType);
+	if (CurrentAmount)
+	{
+		// Если ресурс уже есть в карте, просто увеличиваем его количество.
+		*CurrentAmount += amount;
+	}
+	else
+	{
+		// Если ресурса еще нет, добавляем его с указанным количеством.
+		// Эта ветка сработает, если вы не инициализировали все ресурсы в конструкторе.
+		Resources.Add(ResourceType, amount);
+	}
+
+	UpdateHUD();
+}
+
+bool AMainCharacter::RemoveResources(EResourceType ResourceType, int32 amount)
+{
+	if (GetResourceCount(ResourceType) >= amount) 
+	{
+		int32* CurrentAmount = Resources.Find(ResourceType);
+		if (CurrentAmount)
+		{
+			// Если ресурс уже есть в карте, просто увеличиваем его количество.
+			*CurrentAmount -= amount;
+		}
+		UpdateHUD();
+		return true;
+	}
+	else 
+	{
+		return false;
+	}
+}
+
+int32 AMainCharacter::GetResourceCount(EResourceType ResourceType) const
+{
+	return Resources.FindRef(ResourceType);
+}
+
+
 
 // Called when the game starts or when spawned
 void AMainCharacter::BeginPlay()
@@ -163,9 +190,9 @@ void AMainCharacter::Tick(float DeltaTime)
 
 				switch (CurrentVisualStage)
 				{
-				case 1: NewMesh = DefaultProj->MeshStage1; break;
-				case 2: NewMesh = DefaultProj->MeshStage2; break;
-				case 3: NewMesh = DefaultProj->MeshStage3; break;
+				case 1: if (GetResourceCount(EResourceType::Bone) >= Stage1Cost) NewMesh = DefaultProj->MeshStage1; break;
+				case 2: if (GetResourceCount(EResourceType::Bone) >= Stage2Cost) NewMesh = DefaultProj->MeshStage2; break;
+				case 3: if (GetResourceCount(EResourceType::Bone) >= Stage3Cost) NewMesh = DefaultProj->MeshStage3; break;
 				}
 				
 				if (NewMesh)
@@ -291,25 +318,27 @@ void AMainCharacter::Ability1Released()
 
 void AMainCharacter::ChargingBoneProjectilePressed()
 {
-	if (!bIsBoneProjectileCharging)
-	{
-		bIsBoneProjectileCharging = true;
-		CurrentChargeTime = 0.f;
-
-		CurrentVisualStage = 1; // начинаем с первой стадии
-
-		// Получаем меш первой стадии из дефолтного объекта снаряда
-		if (BoneProjectileClass)
+	if (GetResourceCount(EResourceType::Bone) >= Stage1Cost) {
+		if (!bIsBoneProjectileCharging)
 		{
-			ABoneProjectile* DefaultProj = BoneProjectileClass.GetDefaultObject();
-			if (DefaultProj && DefaultProj->MeshStage1)
-			{
-				ChargingMesh->SetStaticMesh(DefaultProj->MeshStage1);
-			}
-		}
+			bIsBoneProjectileCharging = true;
+			CurrentChargeTime = 0.f;
 
-		// Показываем меш над головой
-		ChargingMesh->SetVisibility(true);
+			CurrentVisualStage = 1; // начинаем с первой стадии
+
+			// Получаем меш первой стадии из дефолтного объекта снаряда
+			if (BoneProjectileClass)
+			{
+				ABoneProjectile* DefaultProj = BoneProjectileClass.GetDefaultObject();
+				if (DefaultProj && DefaultProj->MeshStage1)
+				{
+					ChargingMesh->SetStaticMesh(DefaultProj->MeshStage1);
+				}
+			}
+
+			// Показываем меш над головой
+			ChargingMesh->SetVisibility(true);
+		}
 	}
 }
 
@@ -334,6 +363,35 @@ void AMainCharacter::SpawnChargedBoneProjectile()
 	int32 Stage;
 	if (CurrentChargeTime < StageTime) Stage = 1;
 	else Stage = FMath::Clamp(int32(CurrentChargeTime / StageTime), 1, 3);
+
+	bool isStageSolved = false;
+	do
+	{
+		switch (Stage)
+		{
+		case 1: if (!RemoveResources(EResourceType::Bone, Stage1Cost)) 
+				{ 
+					return; 
+				}
+				else isStageSolved = true;
+			break;
+		case 2: if (!RemoveResources(EResourceType::Bone, Stage2Cost))
+				{ 
+					Stage = 1;
+				}
+				else isStageSolved = true;
+			break;
+		case 3: if (!RemoveResources(EResourceType::Bone, Stage3Cost)) 
+				{ 
+					Stage = 2;
+				}
+				else isStageSolved = true;
+			break;
+		default:
+			break;
+		}
+	} while (!isStageSolved);
+	
 
 	// Позиция над головой: можно взять Socket в скелете или просто смещение
 	FVector SpawnLoc = ChargingOrigin->GetComponentLocation();
