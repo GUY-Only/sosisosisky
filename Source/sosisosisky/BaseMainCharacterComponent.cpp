@@ -15,7 +15,7 @@ void UBaseMainCharacterComponent::BeginPlay()
 
 	if (!OwnerCharacter)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Компонент %s привязан к актору, который не является AMainCharacter!"), *GetName());
+		//UE_LOG(LogTemp, Error, TEXT("Компонент %s привязан к актору, который не является AMainCharacter!"), *GetName());
 	}
 }
 
