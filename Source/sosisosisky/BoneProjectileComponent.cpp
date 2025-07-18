@@ -29,8 +29,6 @@ void UBoneProjectileComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	OwnerCharacter = Cast<AMainCharacter>(GetOwner());
-
 
 	if (OwnerCharacter) {
 		FAttachmentTransformRules AttachmentRules(EAttachmentRule::KeepRelative, false);

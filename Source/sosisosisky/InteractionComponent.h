@@ -3,16 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "BaseMainCharacterComponent.h"
 #include "InteractableActor.h"
 #include "Camera/CameraComponent.h"
 #include "InteractionComponent.generated.h"
 
 class UCameraComponent;
-class AMainCharacter;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class SOSISOSISKY_API UInteractionComponent : public UActorComponent
+class SOSISOSISKY_API UInteractionComponent : public UBaseMainCharacterComponent
 {
 	GENERATED_BODY()
 
@@ -44,11 +43,6 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private: 
-	UPROPERTY() 
-	AMainCharacter* OwnerCharacter;
-
-	UPROPERTY()
-	UCameraComponent* OwnerCamera;
 
 		
 };

@@ -25,15 +25,7 @@ void UInteractionComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
-
-	OwnerCharacter = Cast<AMainCharacter>(GetOwner());
-
-	if (OwnerCharacter)
-	{
-		OwnerCamera = OwnerCharacter->MainCamera;
-	}
-	
+	// ...	
 }
 
 
@@ -42,7 +34,7 @@ void UInteractionComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (OwnerCamera)
+	if (OwnerCharacter->MainCamera)
 	{
 		TraceForInteractables();
 	}
@@ -51,10 +43,10 @@ void UInteractionComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 void UInteractionComponent::TraceForInteractables()
 {
 
-	if (!OwnerCamera) return;
+	if (!OwnerCharacter->MainCamera) return;
 
-	FVector Start = OwnerCamera->GetComponentLocation();
-	FVector End = Start + (OwnerCamera->GetForwardVector() * RayDistance);
+	FVector Start = OwnerCharacter->MainCamera->GetComponentLocation();
+	FVector End = Start + (OwnerCharacter->MainCamera->GetForwardVector() * RayDistance);
 
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(GetOwner());

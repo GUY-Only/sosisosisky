@@ -26,6 +26,14 @@ enum class EAbilities : uint8
 	BoneProjectile
 };
 
+UENUM(BlueprintType)
+enum class EAttacks : uint8
+{
+	None,
+	Suck
+};
+
+
 UCLASS()
 class SOSISOSISKY_API AMainCharacter : public ACharacter
 {
@@ -70,7 +78,20 @@ public:
 	void Ability1Pressed();
 	void Ability1Released();
 
+	void Ability2Pressed();
+	void Ability2Released();
+
+	void Ability3Pressed();
+	void Ability3Released();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Character | Abilities")
 	EAbilities Ability1 = EAbilities::None;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Character | Abilities")
+	EAbilities Ability2 = EAbilities::None;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Character | Abilities")
+	EAbilities Ability3 = EAbilities::None;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UBoneProjectileComponent* BoneProjectileComponent;
@@ -108,10 +129,20 @@ public:
 
 
 
-	// œ Ã
+	// ¿Ú‡ÍË
+
+	void Attack1Pressed();
+	void Attack1Released();
 
 	void Attack2Pressed();
 	void Attack2Released();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Character | Abilities")
+	EAttacks Attack1 = EAttacks::None;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Character | Abilities")
+	EAttacks Attack2 = EAttacks::None;
+	
 
 
 protected:

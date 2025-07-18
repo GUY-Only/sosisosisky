@@ -182,9 +182,15 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAction("Ability1", IE_Pressed, this, &AMainCharacter::Ability1Pressed);
 	PlayerInputComponent->BindAction("Ability1", IE_Released, this, &AMainCharacter::Ability1Released);
+	PlayerInputComponent->BindAction("Ability2", IE_Pressed, this, &AMainCharacter::Ability2Pressed);
+	PlayerInputComponent->BindAction("Ability2", IE_Released, this, &AMainCharacter::Ability2Released);
+	PlayerInputComponent->BindAction("Ability3", IE_Pressed, this, &AMainCharacter::Ability3Pressed);
+	PlayerInputComponent->BindAction("Ability3", IE_Released, this, &AMainCharacter::Ability3Released);
 
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, InteractionComponent, &UInteractionComponent::Interact);
 
+	PlayerInputComponent->BindAction("Attack1", IE_Pressed, this, &AMainCharacter::Attack1Pressed);
+	PlayerInputComponent->BindAction("Attack1", IE_Released, this, &AMainCharacter::Attack1Released);
 	PlayerInputComponent->BindAction("Attack2", IE_Pressed, this, &AMainCharacter::Attack2Pressed);
 	PlayerInputComponent->BindAction("Attack2", IE_Released, this, &AMainCharacter::Attack2Released);
 }
@@ -223,9 +229,9 @@ void AMainCharacter::StopJumping()
 }
 
 
-//Абилки
+// Абилки
 
-void AMainCharacter::Ability1Pressed()		//Задел на будущее на случай добавления новых абилок и их переключения
+void AMainCharacter::Ability1Pressed()
 {
 	switch (Ability1)
 	{
@@ -251,23 +257,110 @@ void AMainCharacter::Ability1Released()
 	}
 }
 
-
-//Снаряд
-
-
-
-
-// Взаимодействие
-
-
-
-
-// ПКМ
-
-void AMainCharacter::Attack2Pressed() {
-
+void AMainCharacter::Ability2Pressed()
+{
+	switch (Ability2)
+	{
+	case EAbilities::None: return;
+		break;
+	case EAbilities::BoneProjectile: BoneProjectileComponent->ChargingBoneProjectilePressed();
+		break;
+	default:
+		break;
+	}
 }
 
-void AMainCharacter::Attack2Released() {
+void AMainCharacter::Ability2Released()
+{
+	switch (Ability2)
+	{
+	case EAbilities::None: return;
+		break;
+	case EAbilities::BoneProjectile: BoneProjectileComponent->ChargingBoneProjectileReleased();
+		break;
+	default:
+		break;
+	}
+}
 
+void AMainCharacter::Ability3Pressed()
+{
+	switch (Ability3)
+	{
+	case EAbilities::None: return;
+		break;
+	case EAbilities::BoneProjectile: BoneProjectileComponent->ChargingBoneProjectilePressed();
+		break;
+	default:
+		break;
+	}
+}
+
+void AMainCharacter::Ability3Released()
+{
+	switch (Ability3)
+	{
+	case EAbilities::None: return;
+		break;
+	case EAbilities::BoneProjectile: BoneProjectileComponent->ChargingBoneProjectileReleased();
+		break;
+	default:
+		break;
+	}
+}
+
+
+
+// Атаки
+
+void AMainCharacter::Attack1Pressed()
+{
+	switch (Attack1)
+	{
+	case EAttacks::None: return;
+		break;
+	case EAttacks::Suck: return;
+		break;
+	default:
+		break;
+	}
+}
+
+void AMainCharacter::Attack1Released()
+{
+	switch (Attack1)
+	{
+	case EAttacks::None: return;
+		break;
+	case EAttacks::Suck: return;
+		break;
+	default:
+		break;
+	}
+}
+
+void AMainCharacter::Attack2Pressed() 
+{
+	switch (Attack2)
+	{
+	case EAttacks::None: return;
+		break;
+	case EAttacks::Suck: return;
+		break;
+	default:
+		break;
+	}
+}
+
+void AMainCharacter::Attack2Released() 
+{
+	switch (Attack2)
+	{
+	case EAttacks::None: return;
+		break;
+	case EAttacks::Suck: return;
+		break;
+	default:
+		break;
+	}
 }
