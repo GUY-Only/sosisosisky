@@ -7,6 +7,7 @@
 #include "BoneProjectile.h"
 #include "InteractionInterface.h"
 #include "Blueprint/UserWidget.h"
+#include "BaseAbilityComponent.h"
 #include "MainCharacter.generated.h"
 
 class UInteractionComponent;
@@ -84,14 +85,17 @@ public:
 	void Ability3Pressed();
 	void Ability3Released();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Character | Abilities")
-	EAbilities Ability1 = EAbilities::None;
+	UFUNCTION(BlueprintCallable, Category = "My Character | Abilities")
+	void SetAbilityForSlot(int32 SlotIndex, EAbilities NewAbility);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Character | Abilities")
-	EAbilities Ability2 = EAbilities::None;
+	UPROPERTY(BlueprintReadOnly, Category = "My Character | Abilities")
+	UBaseAbilityComponent* Ability1_ComponentPtr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Character | Abilities")
-	EAbilities Ability3 = EAbilities::None;
+	UPROPERTY(BlueprintReadOnly, Category = "My Character | Abilities")
+	UBaseAbilityComponent* Ability2_ComponentPtr;
+
+	UPROPERTY(BlueprintReadOnly, Category = "My Character | Abilities")
+	UBaseAbilityComponent* Ability3_ComponentPtr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UBoneProjectileComponent* BoneProjectileComponent;

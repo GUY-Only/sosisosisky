@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BaseMainCharacterComponent.h"
+#include "BaseAbilityComponent.h"
 #include "Camera/CameraComponent.h"
 #include "BoneProjectileComponent.generated.h"
 
 class USceneComponent;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class SOSISOSISKY_API UBoneProjectileComponent : public UBaseMainCharacterComponent
+class SOSISOSISKY_API UBoneProjectileComponent : public UBaseAbilityComponent
 {
 	GENERATED_BODY()
 
@@ -53,6 +53,10 @@ public:
 	TSubclassOf<class ABoneProjectile> BoneProjectileClass;
 
 	// Методы нажатия и отпускания кнопки
+
+	virtual void PressAbility() override;
+	virtual void ReleaseAbility() override;
+
 	void ChargingBoneProjectilePressed();
 	void ChargingBoneProjectileReleased();
 

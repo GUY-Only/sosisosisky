@@ -128,6 +128,16 @@ void UBoneProjectileComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	}
 }
 
+void UBoneProjectileComponent::PressAbility()
+{
+	ChargingBoneProjectilePressed();
+}
+
+void UBoneProjectileComponent::ReleaseAbility()
+{
+	ChargingBoneProjectileReleased();
+}
+
 void UBoneProjectileComponent::ChargingBoneProjectilePressed()
 {
 	if (OwnerCharacter->GetResourceCount(EResourceType::Bone) >= Stage1Cost) {

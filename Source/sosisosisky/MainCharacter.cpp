@@ -75,7 +75,9 @@ AMainCharacter::AMainCharacter()
 
 	BoneProjectileComponent = CreateDefaultSubobject<UBoneProjectileComponent>(TEXT("BoneProjectileComponent"));
 
-	Ability1 = EAbilities::BoneProjectile;
+	Ability1_ComponentPtr = nullptr;
+	Ability2_ComponentPtr = nullptr;
+	Ability3_ComponentPtr = nullptr;
 }
 
 void AMainCharacter::UpdateHUD()
@@ -154,6 +156,10 @@ void AMainCharacter::BeginPlay()
 			}
 		}
 	}
+
+	SetAbilityForSlot(1, EAbilities::BoneProjectile);
+	SetAbilityForSlot(2, EAbilities::None);
+	SetAbilityForSlot(3, EAbilities::None);
 }
 
 // Called every frame
@@ -233,78 +239,73 @@ void AMainCharacter::StopJumping()
 
 void AMainCharacter::Ability1Pressed()
 {
-	switch (Ability1)
+	if (Ability1_ComponentPtr)
 	{
-	case EAbilities::None: return;
-		break;
-	case EAbilities::BoneProjectile: BoneProjectileComponent->ChargingBoneProjectilePressed();
-		break;
-	default:
-		break;
+		Ability1_ComponentPtr->PressAbility();
 	}
 }
 
 void AMainCharacter::Ability1Released()
 {
-	switch (Ability1)
+	if (Ability1_ComponentPtr)
 	{
-	case EAbilities::None: return;
-		break;
-	case EAbilities::BoneProjectile: BoneProjectileComponent->ChargingBoneProjectileReleased();
-		break;
-	default:
-		break;
+		Ability1_ComponentPtr->ReleaseAbility();
 	}
 }
 
 void AMainCharacter::Ability2Pressed()
 {
-	switch (Ability2)
+	if (Ability2_ComponentPtr)
 	{
-	case EAbilities::None: return;
-		break;
-	case EAbilities::BoneProjectile: BoneProjectileComponent->ChargingBoneProjectilePressed();
-		break;
-	default:
-		break;
+		Ability2_ComponentPtr->PressAbility();
 	}
 }
 
 void AMainCharacter::Ability2Released()
 {
-	switch (Ability2)
+	if (Ability2_ComponentPtr)
 	{
-	case EAbilities::None: return;
-		break;
-	case EAbilities::BoneProjectile: BoneProjectileComponent->ChargingBoneProjectileReleased();
-		break;
-	default:
-		break;
+		Ability2_ComponentPtr->ReleaseAbility();
 	}
 }
 
 void AMainCharacter::Ability3Pressed()
 {
-	switch (Ability3)
+	if (Ability3_ComponentPtr)
 	{
-	case EAbilities::None: return;
-		break;
-	case EAbilities::BoneProjectile: BoneProjectileComponent->ChargingBoneProjectilePressed();
-		break;
-	default:
-		break;
+		Ability3_ComponentPtr->PressAbility();
 	}
 }
 
 void AMainCharacter::Ability3Released()
 {
-	switch (Ability3)
+	if (Ability3_ComponentPtr)
 	{
-	case EAbilities::None: return;
+		Ability3_ComponentPtr->ReleaseAbility();
+	}
+}
+
+void AMainCharacter::SetAbilityForSlot(int32 SlotIndex, EAbilities NewAbility)
+{
+	UBaseAbilityComponent** TargetSlot = nullptr;
+
+	switch (SlotIndex)
+	{
+	case 1: TargetSlot = &Ability1_ComponentPtr; break;
+	case 2: TargetSlot = &Ability2_ComponentPtr; break;
+	case 3: TargetSlot = &Ability3_ComponentPtr; break;
+	default: return; 
+	}
+
+	if (!TargetSlot) return;
+
+	switch (NewAbility)
+	{
+	case EAbilities::None:
+		*TargetSlot = nullptr;
 		break;
-	case EAbilities::BoneProjectile: BoneProjectileComponent->ChargingBoneProjectileReleased();
-		break;
-	default:
+	case EAbilities::BoneProjectile:
+		*TargetSlot = BoneProjectileComponent;
 		break;
 	}
 }
