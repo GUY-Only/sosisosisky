@@ -307,6 +307,8 @@ void AMainCharacter::SetAbilityForSlot(int32 SlotIndex, EAbilities NewAbility)
 	case EAbilities::BoneProjectile:
 		*TargetSlot = BoneProjectileComponent;
 		break;
+	default: return; 
+		break;
 	}
 }
 
