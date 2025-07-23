@@ -14,6 +14,7 @@
 #include "Components/TextBlock.h"
 #include "InteractionComponent.h"
 #include "BoneProjectileComponent.h"
+#include "LifeDrainComponent.h"
 
 
 // Sets default values
@@ -72,12 +73,15 @@ AMainCharacter::AMainCharacter()
 	Resources.Add(EResourceType::Soul, 0);
 
 	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
-
 	BoneProjectileComponent = CreateDefaultSubobject<UBoneProjectileComponent>(TEXT("BoneProjectileComponent"));
+	LifeDrainComponent = CreateDefaultSubobject<ULifeDrainComponent>(TEXT("LifeDrainComponent"));
 
 	Ability1_ComponentPtr = nullptr;
 	Ability2_ComponentPtr = nullptr;
 	Ability3_ComponentPtr = nullptr;
+
+	Attack1 = EAttacks::None;
+	Attack2 = EAttacks::LifeDrain;
 }
 
 void AMainCharacter::UpdateHUD()
@@ -322,7 +326,7 @@ void AMainCharacter::Attack1Pressed()
 	{
 	case EAttacks::None: return;
 		break;
-	case EAttacks::Suck: return;
+	case EAttacks::LifeDrain: LifeDrainComponent->PressAttack();
 		break;
 	default:
 		break;
@@ -335,7 +339,7 @@ void AMainCharacter::Attack1Released()
 	{
 	case EAttacks::None: return;
 		break;
-	case EAttacks::Suck: return;
+	case EAttacks::LifeDrain: LifeDrainComponent->ReleaseAttack();
 		break;
 	default:
 		break;
@@ -348,7 +352,7 @@ void AMainCharacter::Attack2Pressed()
 	{
 	case EAttacks::None: return;
 		break;
-	case EAttacks::Suck: return;
+	case EAttacks::LifeDrain: LifeDrainComponent->PressAttack();
 		break;
 	default:
 		break;
@@ -361,7 +365,7 @@ void AMainCharacter::Attack2Released()
 	{
 	case EAttacks::None: return;
 		break;
-	case EAttacks::Suck: return;
+	case EAttacks::LifeDrain: LifeDrainComponent->ReleaseAttack();
 		break;
 	default:
 		break;

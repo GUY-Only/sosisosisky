@@ -13,6 +13,8 @@ class SOSISOSISKY_API AEnemyBase : public ACharacter
 public:
     AEnemyBase();
 
+    bool bIsDead = false;
+
 protected:
     virtual void BeginPlay() override;
     virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
@@ -53,7 +55,7 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|UI")
     UWidgetComponent* HealthBarWidget;
     
-    bool bIsDead = false;
+    
     bool bIsRotating = false;
     bool bIsMoving = false;
     bool bIsDelaying = false;

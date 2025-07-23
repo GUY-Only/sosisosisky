@@ -12,6 +12,7 @@
 
 class UInteractionComponent;
 class UBoneProjectileComponent;
+class ULifeDrainComponent;
 
 UENUM(BlueprintType)
 enum class EResourceType : uint8
@@ -31,7 +32,7 @@ UENUM(BlueprintType)
 enum class EAttacks : uint8
 {
 	None,
-	Suck
+	LifeDrain
 };
 
 
@@ -146,6 +147,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Character | Abilities")
 	EAttacks Attack2 = EAttacks::None;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	class ULifeDrainComponent* LifeDrainComponent;
+
 	
 
 
