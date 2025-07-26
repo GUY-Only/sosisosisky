@@ -26,10 +26,10 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction | UI")
 	FString InteractionText;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction | UI")
 	class UWidgetComponent* InteractionWidget;
 
 	virtual void OnInteract_Implementation(AActor* Caller) override;
@@ -40,6 +40,6 @@ public:
 	void ShowUI();
 	void HideUI();
 
-	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	UFUNCTION(BlueprintCallable, Category = "Interaction | Logic")
 	void UpdateInteractionText();
 };

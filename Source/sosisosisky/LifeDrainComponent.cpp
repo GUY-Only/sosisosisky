@@ -9,6 +9,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "Camera/PlayerCameraManager.h"
+#include "SoulDamageType.h"
 
 // Sets default values for this component's properties
 ULifeDrainComponent::ULifeDrainComponent()
@@ -79,7 +80,7 @@ void ULifeDrainComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 		UE_LOG(LogTemp, Warning, TEXT("Sucking..."));
 		UpdateBeam();
 		// TODO: «десь можно добавить логику самого высасывани€ жизни.
-		UGameplayStatics::ApplyDamage(CurrentTarget.Get(), DrainAmountPerSecond * DeltaTime, OwnerCharacter->GetController(), OwnerCharacter, UDamageType::StaticClass());
+		UGameplayStatics::ApplyDamage(CurrentTarget.Get(), DrainAmountPerSecond * DeltaTime, OwnerCharacter->GetController(), OwnerCharacter, USoulDamageType::StaticClass());
 		
 	}
 	else
@@ -115,7 +116,7 @@ AActor* ULifeDrainComponent::FindBestTarget() const
 
 	
 	TArray<AActor*> AllEnemies;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemyBase::StaticClass(), AllEnemies); //[25]
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASoulActor::StaticClass(), AllEnemies); //[25]
 
 	UE_LOG(LogTemp, Warning, TEXT("Enemies on scene: %d"), AllEnemies.Num());
 
@@ -128,8 +129,8 @@ AActor* ULifeDrainComponent::FindBestTarget() const
 	{
 		//if (Enemy == OwnerCharacter || !Enemy->Implements<UInterface>()) continue; // ѕропускаем себ€ и невалидных врагов
 
-		AEnemyBase* EnemyActor = Cast<AEnemyBase>(Enemy);
-		if (!EnemyActor || EnemyActor->bIsDead)
+		ASoulActor* EnemyActor = Cast<ASoulActor>(Enemy);
+		if (!EnemyActor || EnemyActor->IsDead())
 		{
 			continue;
 		}
@@ -211,8 +212,8 @@ bool ULifeDrainComponent::IsTargetStillValid() const
 	const float Distance = FVector::Dist(StartLocation, EndLocation);
 	if (Distance > MaxBeamDistance) return false;
 
-	AEnemyBase* TargetEnemy = Cast<AEnemyBase>(CurrentTarget.Get());
-	if (TargetEnemy && TargetEnemy->bIsDead)
+	ASoulActor* TargetEnemy = Cast<ASoulActor>(CurrentTarget.Get());
+	if (TargetEnemy && TargetEnemy->IsDead())
 	{
 		return false; // ѕрерываем луч, если цель мертва
 	}

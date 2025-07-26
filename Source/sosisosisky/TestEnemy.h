@@ -42,7 +42,7 @@ public:
 
 protected:
     // Например, хп
-    UPROPERTY(EditAnywhere, Category = "Stats")
+    UPROPERTY(EditAnywhere, Category = "EnemyTest | Stats")
     float Health = 100.f;
 
 };

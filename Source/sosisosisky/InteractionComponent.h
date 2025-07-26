@@ -26,12 +26,12 @@ public:
 	AActor* CurrentInteractable;
 	AActor* PreviousInteractable;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Settings Interaction")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction | Targeting")
 	float RayDistance = 500.f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Settings Interaction")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction | Targeting")
 	float RayRadius = 30.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Settings Interaction")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction | Targeting")
 	TArray<TSubclassOf<AActor>> IgnoreActorClasses;
 
 protected:

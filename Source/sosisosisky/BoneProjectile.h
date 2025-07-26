@@ -32,29 +32,29 @@ public:
     int32 Stage;
 
     /** Урон для каждой стадии */
-    UPROPERTY(EditDefaultsOnly, Category = "My Settings Damage")
+    UPROPERTY(EditDefaultsOnly, Category = "Bone Projectile | Damage")
     float DamageStage1 = 10.f;
-    UPROPERTY(EditDefaultsOnly, Category = "My Settings Damage")
+    UPROPERTY(EditDefaultsOnly, Category = "Bone Projectile | Damage")
     float DamageStage2 = 25.f;
-    UPROPERTY(EditDefaultsOnly, Category = "My Settings Damage")
+    UPROPERTY(EditDefaultsOnly, Category = "Bone Projectile | Damage")
     float DamageStage3 = 50.f;
 
     // Скорость полёта снаряда в UU в секунду (1 UU = 1 см)
-    UPROPERTY(EditDefaultsOnly, Category = "My Settings Physics")
+    UPROPERTY(EditDefaultsOnly, Category = "Bone Projectile | Physics")
     float Speed = 2000.f; 
 
-    UPROPERTY(EditDefaultsOnly, Category = "My Settings Physics")
+    UPROPERTY(EditDefaultsOnly, Category = "Bone Projectile | Physics")
     float Scale = 0.1f;
 
-    UPROPERTY(EditDefaultsOnly, Category = "My Settings Physics")
+    UPROPERTY(EditDefaultsOnly, Category = "Bone Projectile | Physics")
     float Gravity = 0.1f;
 
     /** Меши для каждой стадии */
-    UPROPERTY(EditDefaultsOnly, Category = "My Settings Visual")
+    UPROPERTY(EditDefaultsOnly, Category = "Bone Projectile | Visual")
     UStaticMesh* MeshStage1;
-    UPROPERTY(EditDefaultsOnly, Category = "My Settings Visual")
+    UPROPERTY(EditDefaultsOnly, Category = "Bone Projectile | Visual")
     UStaticMesh* MeshStage2;
-    UPROPERTY(EditDefaultsOnly, Category = "My Settings Visual")
+    UPROPERTY(EditDefaultsOnly, Category = "Bone Projectile | Visual")
     UStaticMesh* MeshStage3;
 
     /** Обработчик столкновений */

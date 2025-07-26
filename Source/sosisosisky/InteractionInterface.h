@@ -24,10 +24,10 @@ class SOSISOSISKY_API IInteractionInterface
 public:
 	
 	// Функция взаимодействия
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction | Logic")
 	void OnInteract(AActor* Caller);
 
 	// Функция для получения текста взаимодействия
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction | Logic")
 	FString GetInteractionText() const;
 };

@@ -21,7 +21,7 @@ public:
 
 	virtual void OnInteract_Implementation(AActor* Caller) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Settings Button")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Button for Platform | Platform")
 	APlatformWithAButton* TargetPlatform;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

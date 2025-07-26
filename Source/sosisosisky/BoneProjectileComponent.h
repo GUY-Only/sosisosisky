@@ -21,11 +21,11 @@ public:
 	// Заряжаемый костянной снаряд
 
 	// Меш для снаряда 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "My Settings BoneProjectile")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bone Projectile | Visual")
 	class UStaticMeshComponent* ChargingMesh;
 
 	// Точка спавна снаряда
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "My Settings BoneProjectile")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bone Projectile | Position")
 	class USceneComponent* ChargingOrigin;
 
 	// Максимальное время на каждую стадию зарядки 
@@ -35,21 +35,21 @@ public:
 
 	int32 CurrentVisualStage = 1;
 
-	UPROPERTY(EditAnywhere, Category = "My Settings BoneProjectile")
+	UPROPERTY(EditAnywhere, Category = "Bone Projectile | Visual")
 	float Scale = 1.f;
 
 	bool bIsBoneProjectileCharging = false;
 	bool bIsButtonReleasedEarly = false;
 
-	UPROPERTY(EditAnywhere, Category = "My Settings BoneProjectile")
+	UPROPERTY(EditAnywhere, Category = "Bone Projectile | Cost")
 	int32 Stage1Cost = 0;
-	UPROPERTY(EditAnywhere, Category = "My Settings BoneProjectile")
+	UPROPERTY(EditAnywhere, Category = "Bone Projectile | Cost")
 	int32 Stage2Cost = 10;
-	UPROPERTY(EditAnywhere, Category = "My Settings BoneProjectile")
+	UPROPERTY(EditAnywhere, Category = "Bone Projectile | Cost")
 	int32 Stage3Cost = 25;
 
 	// Класс снаряда 
-	UPROPERTY(EditAnywhere, Category = "My Settings BoneProjectile")
+	UPROPERTY(EditAnywhere, Category = "Bone Projectile | Visual")
 	TSubclassOf<class ABoneProjectile> BoneProjectileClass;
 
 	// Методы нажатия и отпускания кнопки

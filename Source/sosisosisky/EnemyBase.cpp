@@ -8,6 +8,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Components/ProgressBar.h"
 #include "MainCharacter.h"
+#include "HealthComponent.h"
 
 AEnemyBase::AEnemyBase()
 {
@@ -19,7 +20,9 @@ AEnemyBase::AEnemyBase()
     GetCharacterMovement()->RotationRate = FRotator(0.f, 120.f, 0.f);
     GetCharacterMovement()->MaxWalkSpeed = 300.f;
 
-    HealthBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBar"));
+    HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
+
+    /*HealthBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBar"));    Код закомментирован в связи с перемещением логики здоровья в отдельный компонент.
     HealthBarWidget->SetupAttachment(RootComponent);
     HealthBarWidget->SetWidgetSpace(EWidgetSpace::Screen);
     HealthBarWidget->SetDrawSize(FVector2D(150, 20));
@@ -31,17 +34,33 @@ AEnemyBase::AEnemyBase()
     if (WidgetBPClass.Class)
     {
         HealthBarWidget->SetWidgetClass(WidgetBPClass.Class);
+    }*/
+}
+
+bool AEnemyBase::IsDead() const
+{
+    if (HealthComponent)
+    {
+        return HealthComponent->IsDead();
     }
+    // Если по какой-то причине компонента нет, считаем, что враг "мертв" (безопасное поведение)
+    return true;
 }
 
 void AEnemyBase::BeginPlay()
 {
     Super::BeginPlay();
     SpawnLocation = GetActorLocation();
-    CurrentHealth = MaxHealth;
-    CurrentPercent = DelayedPercent = 1.f;
-    UpdateHealthBar();
-    HealthBarWidget->SetVisibility(false);
+
+    if (HealthComponent)
+    {
+        HealthComponent->OnHealthEnded.AddDynamic(this, &AEnemyBase::OnDeath);
+    }
+
+    //CurrentHealth = MaxHealth;
+    //CurrentPercent = DelayedPercent = 1.f;
+    //UpdateHealthBar();
+    //HealthBarWidget->SetVisibility(false);
 
     if(bIsRoaming)
         RoamToRandomPoint();
@@ -50,11 +69,17 @@ void AEnemyBase::BeginPlay()
 float AEnemyBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
     AController* EventInstigator, AActor* DamageCauser)
 {
-    if (bIsDead)
-        return 0.f;
+    //if (bIsDead)
+    //    return 0.f;
 
     const float DamageApplied = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-    CurrentHealth -= DamageApplied;
+
+    if (HealthComponent)
+    {
+        HealthComponent->TakeDamage(DamageApplied, DamageCauser);
+    }
+
+    /*CurrentHealth -= DamageApplied;
     ShowHealthBar();
 
     CurrentPercent = FMath::Clamp(CurrentHealth / MaxHealth, 0.f, 1.f);
@@ -86,16 +111,72 @@ float AEnemyBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent
             MC->AddResources(EResourceType::Bone, BoneBounty);
             MC->AddResources(EResourceType::Soul, SoulBounty);
         }
-    }
+    }*/
 
     return DamageApplied;
+}
+
+void AEnemyBase::OnDeath(AActor* DamageCauser)
+{
+    // Останавливаем всю логику движения
+    bIsRotating = false;
+    bIsMoving = false;
+    GetWorldTimerManager().ClearTimer(RoamTimerHandle);
+    if (AAIController* AICon = Cast<AAIController>(GetController()))
+    {
+        AICon->StopMovement();
+    }
+
+    // Скрываем и отключаем противника
+    SetActorEnableCollision(false);
+    GetMesh()->SetVisibility(false);
+    //SetActorHiddenInGame(true);
+
+    // Запускаем таймер респауна
+    GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &AEnemyBase::Respawn, RespawnDelay, false);
+
+    // Выдаем награду
+    if (auto* MC = Cast<AMainCharacter>(DamageCauser))
+    {
+        MC->AddResources(EResourceType::Bone, BoneBounty);
+        if(!isSpawningSoul) MC->AddResources(EResourceType::Soul, SoulBounty);
+    }
+
+    if (isSpawningSoul) {
+        UWorld* World = GetWorld();
+        if (World)
+        {
+            FTransform SpawnTransform = this->GetActorTransform(); // Позиция умершего врага
+            FActorSpawnParameters SpawnParams;
+            SpawnParams.Owner = this;
+            SpawnParams.Instigator = GetInstigator();
+            SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+            // 1. Создаем актора, но откладываем его полную инициализацию
+            ASoulActor* SpawnedSoul = World->SpawnActorDeferred<ASoulActor>(SoulActorClass, SpawnTransform, SpawnParams.Owner, SpawnParams.Instigator, SpawnParams.SpawnCollisionHandlingOverride);
+
+            if (SpawnedSoul)
+            {
+                // 2. Настраиваем актора ДО вызова BeginPlay
+                SpawnedSoul->SetParams(SoulLifeTime, SoulBounty, SoulHP, SoulSize);
+
+                // 3. Завершаем спавн. Только сейчас будет вызван BeginPlay на SpawnedSoul
+                UGameplayStatics::FinishSpawningActor(SpawnedSoul, SpawnTransform);
+            }
+        }
+    }
 }
 
 void AEnemyBase::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    if (bIsLerping)
+    if (HealthComponent && HealthComponent->IsDead())
+    {
+        return;
+    }
+
+    /*if (bIsLerping)
     {
         if (bIsDead) {
             DelayedPercent = FMath::FInterpConstantTo(
@@ -120,7 +201,7 @@ void AEnemyBase::Tick(float DeltaTime)
         }
     }
 
-    if (!bIsDead) {
+    if (!bIsDead) {*/
         if (bIsRoaming) {
             if (bIsRotating)
             {
@@ -145,14 +226,14 @@ void AEnemyBase::Tick(float DeltaTime)
                 }
             }
         }
-    }
+    //}
     
 }
 
 void AEnemyBase::RoamToRandomPoint()
 {
-    if (bIsDead)
-        return;
+    //if (bIsDead)
+    //    return;
 
     GetWorldTimerManager().ClearTimer(RoamTimerHandle);
 
@@ -189,17 +270,35 @@ void AEnemyBase::StartMove()
 
 void AEnemyBase::Respawn()
 {
-    bIsDead = false;
-    CurrentHealth = MaxHealth;
+    //bIsDead = false;
+    /*CurrentHealth = MaxHealth;
     CurrentPercent = DelayedPercent = 1.f;
     SetActorLocation(SpawnLocation);
     SetActorHiddenInGame(false);
     GetMesh()->SetVisibility(true);
     SetActorEnableCollision(true);
-    RoamToRandomPoint();
+    RoamToRandomPoint();*/
+
+    // Восстанавливаем состояние противника
+    SetActorLocation(SpawnLocation);
+    SetActorHiddenInGame(false);
+    GetMesh()->SetVisibility(true);
+    SetActorEnableCollision(true);
+
+    // Сбрасываем здоровье в компоненте
+    if (HealthComponent)
+    {
+        HealthComponent->ResetHealth();
+    }
+
+    // Возобновляем патрулирование
+    if (bIsRoaming)
+    {
+        RoamToRandomPoint();
+    }
 }
 
-void AEnemyBase::UpdateHealthBar()
+/*void AEnemyBase::UpdateHealthBar()
 {
     if (UUserWidget* Widget = HealthBarWidget->GetUserWidgetObject())
     {
@@ -244,4 +343,4 @@ void AEnemyBase::StartDelayedLerp()
 {
     bIsDelaying = false;
     bIsLerping = true;
-}
+}*/
