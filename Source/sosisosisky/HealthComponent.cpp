@@ -34,7 +34,7 @@ void UHealthComponent::BeginPlay()
         HealthBarWidget->AttachToComponent(Owner->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
         HealthBarWidget->SetWidgetSpace(EWidgetSpace::Screen);
         HealthBarWidget->SetDrawSize(FVector2D(150, 20));
-        HealthBarWidget->SetRelativeLocation(FVector(0, 0, 120)); // Вы можете настроить это смещение
+        HealthBarWidget->SetRelativeLocation(HealthBarOffset);
         HealthBarWidget->SetWidgetClass(HealthBarWidgetClass);
 
         UpdateHealthBar();

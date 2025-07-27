@@ -37,12 +37,30 @@ ASoulActor::ASoulActor()
 	
 }
 
-void ASoulActor::SetParams(float NewLifeTime, int NewBounty, float NewSoulHP, float NewSoulRadius)
+void ASoulActor::SetParams(int NewBounty, float NewLifeTime, float NewSoulHP, float NewSoulRadius)
 {
 	LifeTime = NewLifeTime;
 	Bounty = NewBounty;
 	HealthComponent->SetMaxHealth(NewSoulHP);
 	SoulRadius = NewSoulRadius;
+}
+
+void ASoulActor::SetParams(int NewBounty, float NewLifeTime, float NewSoulHP)
+{
+	LifeTime = NewLifeTime;
+	Bounty = NewBounty;
+	HealthComponent->SetMaxHealth(NewSoulHP);
+}
+
+void ASoulActor::SetParams(int NewBounty, float NewLifeTime)
+{
+	LifeTime = NewLifeTime;
+	Bounty = NewBounty;
+}
+
+void ASoulActor::SetParams(int NewBounty)
+{
+	Bounty = NewBounty;
 }
 
 float ASoulActor::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)

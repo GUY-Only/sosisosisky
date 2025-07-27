@@ -32,7 +32,13 @@ public:
 	float SoulRadius = 50.0f;
 
 	// Устанавливает параметры души
-	void SetParams(float NewLifeTime, int NewBounty, float NewSoulHP, float NewSoulRadius);
+	void SetParams(int NewBounty, float NewLifeTime, float NewSoulHP, float NewSoulRadius);
+	// Устанавливает параметры души
+	void SetParams(int NewBounty, float NewLifeTime, float NewSoulHP);
+	// Устанавливает параметры души
+	void SetParams(int NewBounty, float NewLifeTime);
+	// Устанавливает параметры души
+	void SetParams(int NewBounty);
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 		AController* EventInstigator, AActor* DamageCauser) override;

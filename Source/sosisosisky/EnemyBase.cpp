@@ -158,7 +158,7 @@ void AEnemyBase::OnDeath(AActor* DamageCauser)
             if (SpawnedSoul)
             {
                 // 2. Настраиваем актора ДО вызова BeginPlay
-                SpawnedSoul->SetParams(SoulLifeTime, SoulBounty, SoulHP, SoulSize);
+                SpawnedSoul->SetParams(SoulBounty, SoulLifeTime, SoulHP, SoulSize);
 
                 // 3. Завершаем спавн. Только сейчас будет вызван BeginPlay на SpawnedSoul
                 UGameplayStatics::FinishSpawningActor(SpawnedSoul, SpawnTransform);

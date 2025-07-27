@@ -20,6 +20,9 @@ public:
     UPROPERTY(BlueprintAssignable, Category = "HealthComponent | Events")
     FOnHealthEnded OnHealthEnded;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HealthComponent | UI")
+    FVector HealthBarOffset = FVector(0, 0, 120);
+
 protected:
     virtual void BeginPlay() override;
     virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -76,4 +79,12 @@ public:
     // Функция для первичной установки максимального здоровья. 
     UFUNCTION(BlueprintCallable, Category = "HealthComponent")
     void SetMaxHealth(float NewHealth);
+
+    // Возращает максимальное здоровье. 
+    UFUNCTION(BlueprintCallable, Category = "HealthComponent")
+    float GetMaxHealth() const { return MaxHealth; }
+
+    // Возращает текущее здоровье. 
+    UFUNCTION(BlueprintCallable, Category = "HealthComponent")
+    float GetHealth() const { return CurrentHealth; }
 };
