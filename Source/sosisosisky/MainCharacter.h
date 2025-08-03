@@ -76,6 +76,8 @@ public:
 
 
 	// Абилки
+	
+	bool CanUseAbilities = true;
 
 	void Ability1Pressed();
 	void Ability1Released();

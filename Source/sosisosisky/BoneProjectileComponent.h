@@ -9,6 +9,15 @@
 
 class USceneComponent;
 
+UENUM(BlueprintType)
+enum class EProjectileChargeState : uint8
+{
+	Idle UMETA(DisplayName = "Idle"),
+	Charging UMETA(DisplayName = "Charging"),
+	PendingRelease UMETA(DisplayName = "PendingRelease")
+};
+
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SOSISOSISKY_API UBoneProjectileComponent : public UBaseAbilityComponent
 {
@@ -17,8 +26,6 @@ class SOSISOSISKY_API UBoneProjectileComponent : public UBaseAbilityComponent
 public:	
 	// Sets default values for this component's properties
 	UBoneProjectileComponent();
-
-	// Заряжаемый костянной снаряд
 
 	// Меш для снаряда 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bone Projectile | Visual")
@@ -38,8 +45,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Bone Projectile | Visual")
 	float Scale = 1.f;
 
-	bool bIsBoneProjectileCharging = false;
-	bool bIsButtonReleasedEarly = false;
+	//bool bIsBoneProjectileCharging = false;
+	//bool bIsButtonReleasedEarly = false;
 
 	UPROPERTY(EditAnywhere, Category = "Bone Projectile | Cost")
 	int32 Stage1Cost = 0;
@@ -71,5 +78,9 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
+	// Новое состояние заряда
+	EProjectileChargeState ChargeState = EProjectileChargeState::Idle;
 
+	// Блокировка спама
+	bool bIsAbilityLocked = false;
 };

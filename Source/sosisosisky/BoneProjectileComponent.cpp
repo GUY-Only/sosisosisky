@@ -53,6 +53,77 @@ void UBoneProjectileComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 	// Визуализация поввляения BoneProjectile 
 	if (OwnerCharacter) {
+
+		switch (ChargeState)
+		{
+		case EProjectileChargeState::Idle:
+			OwnerCharacter->GetCharacterMovement()->MaxWalkSpeed = OwnerCharacter->MaxSpeed;
+			break;
+		case EProjectileChargeState::Charging:
+		{
+			OwnerCharacter->GetCharacterMovement()->MaxWalkSpeed = OwnerCharacter->MaxSpeed / 2;
+			CurrentChargeTime = FMath::Min(CurrentChargeTime + DeltaTime, 3.f);
+
+			int32 NewStage = (CurrentChargeTime < StageTime) ? 1 : FMath::Clamp(int32(CurrentChargeTime / StageTime), 1, 3);
+			if (NewStage != CurrentVisualStage)
+			{
+				CurrentVisualStage = NewStage;
+				if (BoneProjectileClass)
+				{
+					ABoneProjectile* DefaultProj = BoneProjectileClass.GetDefaultObject();
+					UStaticMesh* NewMesh = nullptr;
+					switch (CurrentVisualStage)
+					{
+					case 1: if (OwnerCharacter->GetResourceCount(EResourceType::Bone) >= Stage1Cost) NewMesh = DefaultProj->MeshStage1; break;
+					case 2: if (OwnerCharacter->GetResourceCount(EResourceType::Bone) >= Stage2Cost) NewMesh = DefaultProj->MeshStage2; break;
+					case 3: if (OwnerCharacter->GetResourceCount(EResourceType::Bone) >= Stage3Cost) NewMesh = DefaultProj->MeshStage3; break;
+					}
+					if (NewMesh)
+					{
+						ChargingMesh->SetStaticMesh(NewMesh);
+					}
+				}
+			}
+
+			
+
+			if (ChargeState == EProjectileChargeState::PendingRelease && CurrentChargeTime >= StageTime)
+			{
+				ChargeState = EProjectileChargeState::Idle;
+				ChargingMesh->SetVisibility(false);
+				SpawnChargedBoneProjectile();
+			}
+			break;
+		}
+		case EProjectileChargeState::PendingRelease:
+			CurrentChargeTime = FMath::Min(CurrentChargeTime + DeltaTime, 3.f);
+			if (CurrentChargeTime >= StageTime) {
+				ChargeState = EProjectileChargeState::Idle;
+				ChargingMesh->SetVisibility(false);
+				SpawnChargedBoneProjectile();
+			}
+			break;
+		default:
+			break;
+		}
+
+		if (ChargeState == EProjectileChargeState::Charging || ChargeState == EProjectileChargeState::PendingRelease) {
+			FRotator ProjDirection = FRotationMatrix::MakeFromX(OwnerCharacter->MainCamera->GetForwardVector()).Rotator();
+			ChargingMesh->SetWorldRotation(ProjDirection);
+
+			if (CurrentChargeTime < StageTime)
+			{
+				float Alpha = CurrentChargeTime / StageTime;
+				float Eased = FMath::InterpEaseInOut(0.f, Scale, Alpha, 2.f);
+				ChargingMesh->SetWorldScale3D(FVector(Eased));
+			}
+			else
+			{
+				ChargingMesh->SetWorldScale3D(FVector(Scale));
+			}
+		}
+
+		/* Старый способ до ввода enum
 		if (bIsBoneProjectileCharging)
 		{
 
@@ -95,10 +166,10 @@ void UBoneProjectileComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 			if (CurrentChargeTime < StageTime)
 			{
 
-				/* Линейное масштабирование
-				*
-				float Scale = CurrentChargeTime / StageTime;
-				ChargingMesh->SetWorldScale3D(FVector(Scale));*/
+				// Линейное масштабирование
+				//
+				//float Scale = CurrentChargeTime / StageTime;
+				//ChargingMesh->SetWorldScale3D(FVector(Scale));
 
 
 				// Плавное масштабирование по кривой
@@ -124,7 +195,7 @@ void UBoneProjectileComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 				SpawnChargedBoneProjectile();
 			}
 		}
-		else OwnerCharacter->GetCharacterMovement()->MaxWalkSpeed = OwnerCharacter->MaxSpeed;
+		else OwnerCharacter->GetCharacterMovement()->MaxWalkSpeed = OwnerCharacter->MaxSpeed; */
 	}
 }
 
@@ -140,15 +211,36 @@ void UBoneProjectileComponent::ReleaseAbility()
 
 void UBoneProjectileComponent::ChargingBoneProjectilePressed()
 {
+	if (bIsAbilityLocked || !OwnerCharacter) return;
+
 	if (OwnerCharacter->GetResourceCount(EResourceType::Bone) >= Stage1Cost) {
-		if (!bIsBoneProjectileCharging)
-		{
-			bIsBoneProjectileCharging = true;
-			CurrentChargeTime = 0.f;
-
-			CurrentVisualStage = 1; // начинаем с первой стадии
-
+		//if (!bIsBoneProjectileCharging)											Старый способ до ввода enum
+		//{
+		//	bIsBoneProjectileCharging = true;
+		//	CurrentChargeTime = 0.f;
+		//
+		//	CurrentVisualStage = 1; // начинаем с первой стадии
+		//
 			// Получаем меш первой стадии из дефолтного объекта снаряда
+		//	if (BoneProjectileClass)
+		//	{
+		//		ABoneProjectile* DefaultProj = BoneProjectileClass.GetDefaultObject();
+		//		if (DefaultProj && DefaultProj->MeshStage1)
+		//		{
+		//			ChargingMesh->SetStaticMesh(DefaultProj->MeshStage1);
+		//		}
+		//	}
+
+			// Показываем меш над головой
+		//	ChargingMesh->SetVisibility(true);
+		//}
+
+		if (ChargeState == EProjectileChargeState::Idle)
+		{
+			ChargeState = EProjectileChargeState::Charging;
+			CurrentChargeTime = 0.f;
+			CurrentVisualStage = 1;
+
 			if (BoneProjectileClass)
 			{
 				ABoneProjectile* DefaultProj = BoneProjectileClass.GetDefaultObject();
@@ -158,7 +250,6 @@ void UBoneProjectileComponent::ChargingBoneProjectilePressed()
 				}
 			}
 
-			// Показываем меш над головой
 			ChargingMesh->SetVisibility(true);
 		}
 	}
@@ -166,19 +257,36 @@ void UBoneProjectileComponent::ChargingBoneProjectilePressed()
 
 void UBoneProjectileComponent::ChargingBoneProjectileReleased()
 {
+	/* Старый способ до ввода enum
 	if (CurrentChargeTime < StageTime) {
 		bIsButtonReleasedEarly = true;
 	}
 	else
 	{
 		bIsBoneProjectileCharging = false;
+		bIsButtonReleasedEarly = false;
 		ChargingMesh->SetVisibility(false);
 		SpawnChargedBoneProjectile();
+	}*/
+
+	if (ChargeState == EProjectileChargeState::Charging)
+	{
+		if (CurrentChargeTime < StageTime)
+		{
+			ChargeState = EProjectileChargeState::PendingRelease;
+		}
+		else
+		{
+			ChargeState = EProjectileChargeState::Idle;
+			ChargingMesh->SetVisibility(false);
+			SpawnChargedBoneProjectile();
+		}
 	}
 }
 
 void UBoneProjectileComponent::SpawnChargedBoneProjectile()
 {
+	/* Старый способ до ввода enum
 	if (!BoneProjectileClass) return;
 
 	// Определяем стадию: 0–2 сек - Stage=1, 2–3 сек - Stage=2, 3+ сек - Stage=3	
@@ -229,5 +337,39 @@ void UBoneProjectileComponent::SpawnChargedBoneProjectile()
 	if (Proj)
 	{
 		Proj->InitCharge(Stage, SpawnRot.Vector(), OwnerCharacter);
+	}*/
+
+	if (!BoneProjectileClass || !OwnerCharacter) return;
+
+	int32 Stage = (CurrentChargeTime < StageTime) ? 1 : FMath::Clamp(int32(CurrentChargeTime / StageTime), 1, 3);
+	bool bStageSolved = false;
+	do
+	{
+		switch (Stage)
+		{
+		case 1: if (!OwnerCharacter->RemoveResources(EResourceType::Bone, Stage1Cost)) return; else bStageSolved = true; break;
+		case 2: if (!OwnerCharacter->RemoveResources(EResourceType::Bone, Stage2Cost)) Stage = 1; else bStageSolved = true; break;
+		case 3: if (!OwnerCharacter->RemoveResources(EResourceType::Bone, Stage3Cost)) Stage = 2; else bStageSolved = true; break;
+		default: break;
+		}
+	} while (!bStageSolved);
+
+	FVector SpawnLoc = ChargingOrigin->GetComponentLocation();
+	FRotator SpawnRot = OwnerCharacter->GetControlRotation();
+
+	FActorSpawnParameters Params;
+	Params.Instigator = OwnerCharacter;
+	Params.Owner = OwnerCharacter;
+
+	ABoneProjectile* Proj = GetWorld()->SpawnActor<ABoneProjectile>(BoneProjectileClass, SpawnLoc, SpawnRot, Params);
+
+	if (Proj)
+	{
+		Proj->InitCharge(Stage, SpawnRot.Vector(), OwnerCharacter);
 	}
+
+	CurrentChargeTime = 0.f;
+	CurrentVisualStage = 0;
+	bIsAbilityLocked = true;
+	GetWorld()->GetTimerManager().SetTimerForNextTick([this]() { bIsAbilityLocked = false; });
 }
