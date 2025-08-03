@@ -77,6 +77,8 @@ protected:
     //bool bIsLerping = false;
 
     FVector SpawnLocation;
+    FRotator SpawnRotation;
+    FRotator SpawnMeshRotation;
     FVector NextMoveLocation;
     FRotator DesiredRotation;
     FTimerHandle RoamTimerHandle;

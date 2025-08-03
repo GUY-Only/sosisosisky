@@ -9,6 +9,7 @@
 #include "Components/ProgressBar.h"
 #include "MainCharacter.h"
 #include "HealthComponent.h"
+#include "Components/CapsuleComponent.h"
 
 AEnemyBase::AEnemyBase()
 {
@@ -51,6 +52,8 @@ void AEnemyBase::BeginPlay()
 {
     Super::BeginPlay();
     SpawnLocation = GetActorLocation();
+    SpawnRotation = GetActorRotation();
+    SpawnMeshRotation = GetMesh()->GetRelativeRotation();
 
     if (HealthComponent)
     {
@@ -127,10 +130,20 @@ void AEnemyBase::OnDeath(AActor* DamageCauser)
         AICon->StopMovement();
     }
 
-    // Скрываем и отключаем противника
-    SetActorEnableCollision(false);
-    GetMesh()->SetVisibility(false);
-    //SetActorHiddenInGame(true);
+    // Отключаем коллизию капсулы, чтобы не мешала регдоллу
+    GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+    // Включаем физику на меше (регдолл)
+    USkeletalMeshComponent* MeshComp = GetMesh();
+    MeshComp->SetCollisionProfileName(TEXT("Ragdoll"));
+    MeshComp->SetSimulatePhysics(true);
+    MeshComp->SetAllBodiesSimulatePhysics(true);
+    MeshComp->WakeAllRigidBodies();
+    MeshComp->bBlendPhysics = true;
+    
+    //Скрываем и отключаем противника
+    //SetActorEnableCollision(false);
+    //GetMesh()->SetVisibility(false);
 
     // Запускаем таймер респауна
     GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &AEnemyBase::Respawn, RespawnDelay, false);
@@ -280,10 +293,33 @@ void AEnemyBase::Respawn()
     RoamToRandomPoint();*/
 
     // Восстанавливаем состояние противника
-    SetActorLocation(SpawnLocation);
-    SetActorHiddenInGame(false);
-    GetMesh()->SetVisibility(true);
-    SetActorEnableCollision(true);
+    //SetActorLocation(SpawnLocation);
+    SetActorLocationAndRotation(SpawnLocation, SpawnRotation);
+    //GetMesh()->SetRelativeRotation(SpawnRotation);
+
+    GetMesh()->AttachToComponent(GetCapsuleComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+    GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -GetCapsuleComponent()->GetScaledCapsuleHalfHeight()));
+    GetMesh()->SetRelativeRotation(SpawnMeshRotation);
+    
+
+    //Метод через скрытие меша
+    // 
+    //GetMesh()->SetVisibility(true);
+    //SetActorEnableCollision(true);
+
+    //Регдолл
+    // Выключаем физику
+    USkeletalMeshComponent* MeshComp = GetMesh();
+    MeshComp->SetSimulatePhysics(false);
+    MeshComp->SetAllBodiesSimulatePhysics(false);
+    MeshComp->SetCollisionProfileName(TEXT("CharacterMesh"));
+
+    // Включаем капсулу
+    GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+    // Восстанавливаем поворот
+    //SetActorRotation(FRotator(0.f, GetActorRotation().Yaw, 0.f));
+
 
     // Сбрасываем здоровье в компоненте
     if (HealthComponent)
