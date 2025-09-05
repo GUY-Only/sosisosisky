@@ -3,10 +3,17 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Delegates/DelegateCombinations.h"
 #include "HealthComponent.generated.h"
 
-// Декларируем делегат (событие), который будет вызываться, когда здоровье закончится.
+// Декларируем делегат, который будет вызываться, когда здоровье закончится.
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthEnded, AActor*, DamageCauser);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
+    FOnHealthChanged,
+    float, NewPercent,
+    float, DelayedPercent
+);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class SOSISOSISKY_API UHealthComponent : public UActorComponent
@@ -19,6 +26,9 @@ public:
     // Делегат, который можно будет использовать в Blueprint'ах и C++ для реакции на смерть.
     UPROPERTY(BlueprintAssignable, Category = "HealthComponent | Events")
     FOnHealthEnded OnHealthEnded;
+
+    UPROPERTY(BlueprintAssignable, Category = "Health")
+    FOnHealthChanged OnHealthChanged;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HealthComponent | UI")
     FVector HealthBarOffset = FVector(0, 0, 120);
@@ -87,4 +97,6 @@ public:
     // Возращает текущее здоровье. 
     UFUNCTION(BlueprintCallable, Category = "HealthComponent")
     float GetHealth() const { return CurrentHealth; }
+
+    bool isPlayerOwner = false;
 };

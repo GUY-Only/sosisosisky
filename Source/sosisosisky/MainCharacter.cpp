@@ -15,6 +15,8 @@
 #include "InteractionComponent.h"
 #include "BoneProjectileComponent.h"
 #include "LifeDrainComponent.h"
+#include "HealthComponent.h"
+#include "Components/ProgressBar.h"
 
 
 // Sets default values
@@ -82,6 +84,8 @@ AMainCharacter::AMainCharacter()
 
 	Attack1 = EAttacks::None;
 	Attack2 = EAttacks::LifeDrain;
+
+	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 }
 
 void AMainCharacter::UpdateHUD()
@@ -159,11 +163,56 @@ void AMainCharacter::BeginPlay()
 				PlayerHUDWidget->AddToViewport();
 			}
 		}
+
+		
 	}
 
 	SetAbilityForSlot(1, EAbilities::BoneProjectile);
 	SetAbilityForSlot(2, EAbilities::None);
 	SetAbilityForSlot(3, EAbilities::None);
+
+	if (HealthComponent) {
+		HealthComponent->OnHealthEnded.AddDynamic(this, &AMainCharacter::OnDeath);
+		HealthComponent->OnHealthChanged.AddDynamic(this, &AMainCharacter::HandleHealthChanged);
+		UE_LOG(LogTemp, Warning, TEXT("AddDynamic"));
+	}
+
+}
+
+void AMainCharacter::OnDeath(AActor* DamageCauser)
+{
+
+}
+
+float AMainCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	const float DamageApplied = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	if (HealthComponent)
+		HealthComponent->TakeDamage(DamageApplied, DamageCauser);
+	return DamageApplied;
+
+}
+
+void AMainCharacter::HandleHealthChanged(float NewPercent, float DelayedPercent)
+{
+	UE_LOG(LogTemp, Warning, TEXT("HandleHealthChanged"));
+	if (!PlayerHUDWidget) return;
+	UE_LOG(LogTemp, Warning, TEXT("PlayerHUDWidget"));
+	
+		// 1. Получаем вложенный виджет (сам HealthBarHUD)
+		if (UUserWidget* HealthBarHUD = Cast<UUserWidget>(PlayerHUDWidget->GetWidgetFromName(TEXT("WBP_HealthBarHUD"))))
+		{
+			// 2. Уже внутри него ищем прогресс-бары
+			if (UProgressBar* Bar = Cast<UProgressBar>(HealthBarHUD->GetWidgetFromName(TEXT("HealthBar"))))
+			{
+				Bar->SetPercent(NewPercent);
+			}
+			if (UProgressBar* DelayBar = Cast<UProgressBar>(HealthBarHUD->GetWidgetFromName(TEXT("DelayedBar"))))
+			{
+				DelayBar->SetPercent(DelayedPercent);
+			}
+		}
+	
 }
 
 // Called every frame
@@ -231,6 +280,7 @@ void AMainCharacter::MoveRight(float Axis)
 void AMainCharacter::Jump()
 {
 	if (Controller != NULL && bCanMove) ACharacter::Jump();
+	HealthComponent->TakeDamage(10.0f, this);
 }
 
 void AMainCharacter::StopJumping()

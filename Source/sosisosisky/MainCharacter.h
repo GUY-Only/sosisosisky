@@ -13,6 +13,7 @@
 class UInteractionComponent;
 class UBoneProjectileComponent;
 class ULifeDrainComponent;
+class UHealthComponent;
 
 UENUM(BlueprintType)
 enum class EResourceType : uint8
@@ -162,6 +163,18 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Main Character | Resources")
 	TMap<EResourceType, int32> Resources;
+
+	UFUNCTION()
+	void OnDeath(AActor* DamageCauser);
+	
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+		AController* EventInstigator, AActor* DamageCauser) override;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "EnemyBase | Components")
+	UHealthComponent* HealthComponent;
+
+	void HandleHealthChanged(float CurrentPercent, float DelayedPercent);
+
 
 
 public:	

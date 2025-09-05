@@ -4,12 +4,14 @@
 #include "Components/ProgressBar.h"
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "MainCharacter.h"
+#include "Delegates/DelegateCombinations.h"
 
 UHealthComponent::UHealthComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
 
-    // Находим класс виджета по умолчанию. Вы можете изменить путь на свой.
+    // Находим класс виджета по умолчанию. 
     static ConstructorHelpers::FClassFinder<UUserWidget> WidgetBPClass(TEXT("/Game/UI/WBP_HealthBarRed"));
     if (WidgetBPClass.Class)
     {
@@ -26,7 +28,10 @@ void UHealthComponent::BeginPlay()
     bIsDead = false;
 
     AActor* Owner = GetOwner();
-    if (Owner && HealthBarWidgetClass)
+    if(Owner == Cast<AMainCharacter>(GetOwner()))
+        isPlayerOwner = true;
+
+    if (Owner && HealthBarWidgetClass && !isPlayerOwner)
     {
         // Создаем компонент виджета и прикрепляем его к владельцу.
         HealthBarWidget = NewObject<UWidgetComponent>(Owner, TEXT("HealthBar"));
@@ -36,6 +41,7 @@ void UHealthComponent::BeginPlay()
         HealthBarWidget->SetDrawSize(FVector2D(150, 20));
         HealthBarWidget->SetRelativeLocation(HealthBarOffset);
         HealthBarWidget->SetWidgetClass(HealthBarWidgetClass);
+
 
         UpdateHealthBar();
         HealthBarWidget->SetVisibility(false);
@@ -123,22 +129,27 @@ void UHealthComponent::HandleOwnerDeath(AActor* DamageCauser)
 
 void UHealthComponent::UpdateHealthBar()
 {
-    if (UUserWidget* Widget = HealthBarWidget->GetUserWidgetObject())
-    {
-        if (UProgressBar* Bar = Cast<UProgressBar>(Widget->GetWidgetFromName(TEXT("HealthBar"))))
+    if (!isPlayerOwner) {
+        if (UUserWidget* Widget = HealthBarWidget->GetUserWidgetObject())
         {
-            Bar->SetPercent(CurrentPercent);
+            if (UProgressBar* Bar = Cast<UProgressBar>(Widget->GetWidgetFromName(TEXT("HealthBar"))))
+            {
+                Bar->SetPercent(CurrentPercent);
+            }
+            if (UProgressBar* DelayBar = Cast<UProgressBar>(Widget->GetWidgetFromName(TEXT("DelayedBar"))))
+            {
+                DelayBar->SetPercent(DelayedPercent);
+            }
         }
-        if (UProgressBar* DelayBar = Cast<UProgressBar>(Widget->GetWidgetFromName(TEXT("DelayedBar"))))
-        {
-            DelayBar->SetPercent(DelayedPercent);
-        }
+    }
+    else {
+        OnHealthChanged.Broadcast(CurrentPercent, DelayedPercent);
     }
 }
 
 void UHealthComponent::ShowHealthBar()
 {
-    if (HealthBarWidget)
+    if (!isPlayerOwner && HealthBarWidget)
     {
         HealthBarWidget->SetVisibility(true);
         GetWorld()->GetTimerManager().ClearTimer(HealthBarTimerHandle);
@@ -148,7 +159,7 @@ void UHealthComponent::ShowHealthBar()
 
 void UHealthComponent::HideHealthBar()
 {
-    if (HealthBarWidget)
+    if (!isPlayerOwner && HealthBarWidget)
     {
         HealthBarWidget->SetVisibility(false);
     }
