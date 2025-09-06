@@ -239,7 +239,7 @@ void UBoneProjectileComponent::ChargingBoneProjectilePressed()
 		{
 			ChargeState = EProjectileChargeState::Charging;
 			CurrentChargeTime = 0.f;
-			CurrentVisualStage = 1;
+			CurrentVisualStage = 1;	
 
 			if (BoneProjectileClass)
 			{

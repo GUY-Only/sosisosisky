@@ -14,6 +14,7 @@ class UInteractionComponent;
 class UBoneProjectileComponent;
 class ULifeDrainComponent;
 class UHealthComponent;
+class UPlayerDeathHUDWidget;
 
 UENUM(BlueprintType)
 enum class EResourceType : uint8
@@ -58,6 +59,11 @@ public:
 
 	float CameraDistance;
 	float RotationRate;
+
+	UPROPERTY()
+	USceneComponent* DefaultSpringArmParent;
+	UPROPERTY()
+	FTransform DefaultSpringArmRelativeTransform;
 
 
 
@@ -112,6 +118,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character | Components")
 	class UInteractionComponent* InteractionComponent;
 
+	void Interact();
+
 
 
 	// Ресурсы
@@ -132,6 +140,11 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character | UI")
 	UUserWidget* PlayerHUDWidget;
+
+	TSubclassOf<UPlayerDeathHUDWidget> PlayerDeathHUDClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character | UI")
+	UPlayerDeathHUDWidget* PlayerDeathHUDWidget;
 
 	void UpdateHUD();
 
@@ -164,15 +177,38 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Main Character | Resources")
 	TMap<EResourceType, int32> Resources;
 
+	
+	// Смэрть
+
+	FVector SpawnLocation;
+	FRotator SpawnRotation;
+	FRotator SpawnMeshRotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Main Character | Respawn")
+	float RespawnDelay = 5.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Main Character | Respawn")
+	float CamLagSpeed = 3.f;
+
+	FTimerHandle RespawnTimerHandle;
+	FTimerHandle RespawnHUDTimerHandle;
+
 	UFUNCTION()
 	void OnDeath(AActor* DamageCauser);
+	void Respawn();
+	void RespawnHUDAnim();
+
 	
+
+	
+
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 		AController* EventInstigator, AActor* DamageCauser) override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "EnemyBase | Components")
 	UHealthComponent* HealthComponent;
 
+	UFUNCTION()
 	void HandleHealthChanged(float CurrentPercent, float DelayedPercent);
 
 

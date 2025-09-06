@@ -17,6 +17,8 @@
 #include "LifeDrainComponent.h"
 #include "HealthComponent.h"
 #include "Components/ProgressBar.h"
+#include "PlayerDeathHUDWidget.h"
+#include "Kismet/GameplayStatics.h"
 
 
 // Sets default values
@@ -71,6 +73,13 @@ AMainCharacter::AMainCharacter()
 		PlayerHUDClass = WidgetBPClass.Class;
 	}
 
+	static ConstructorHelpers::FClassFinder<UPlayerDeathHUDWidget> DeathWidgetBPClass(TEXT("/Game/UI/WBP_DeathHUD"));
+
+	if (WidgetBPClass.Succeeded())
+	{
+		PlayerDeathHUDClass = DeathWidgetBPClass.Class;
+	}
+
 	Resources.Add(EResourceType::Bone, 0);
 	Resources.Add(EResourceType::Soul, 0);
 
@@ -99,6 +108,13 @@ void AMainCharacter::UpdateHUD()
 	if (UTextBlock* TB = Cast<UTextBlock>(PlayerHUDWidget->GetWidgetFromName(TEXT("Txt_SoulCounter"))))
 	{
 		TB->SetText(FText::AsNumber(GetResourceCount(EResourceType::Soul)));
+	}
+}
+
+void AMainCharacter::Interact()
+{
+	if (!HealthComponent->IsDead()) {
+		InteractionComponent->Interact();
 	}
 }
 
@@ -167,6 +183,17 @@ void AMainCharacter::BeginPlay()
 		
 	}
 
+	if (PlayerDeathHUDClass)
+	{
+		APlayerController* PlayerController = GetController<APlayerController>();
+		if (PlayerController)
+		{
+			PlayerDeathHUDWidget = CreateWidget<UPlayerDeathHUDWidget>(PlayerController, PlayerDeathHUDClass);
+		}
+
+
+	}
+
 	SetAbilityForSlot(1, EAbilities::BoneProjectile);
 	SetAbilityForSlot(2, EAbilities::None);
 	SetAbilityForSlot(3, EAbilities::None);
@@ -174,14 +201,133 @@ void AMainCharacter::BeginPlay()
 	if (HealthComponent) {
 		HealthComponent->OnHealthEnded.AddDynamic(this, &AMainCharacter::OnDeath);
 		HealthComponent->OnHealthChanged.AddDynamic(this, &AMainCharacter::HandleHealthChanged);
-		UE_LOG(LogTemp, Warning, TEXT("AddDynamic"));
 	}
+
+	SpawnLocation = GetActorLocation();
+	SpawnRotation = GetActorRotation();
+	SpawnMeshRotation = GetMesh()->GetRelativeRotation();
+
+	if(CameraBoom)
+		DefaultSpringArmRelativeTransform = CameraBoom->GetRelativeTransform();
 
 }
 
 void AMainCharacter::OnDeath(AActor* DamageCauser)
 {
+	// Отключаем управление
+	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
+	if (PC)
+	{
+		PC->SetIgnoreMoveInput(true);	//	Клавиши ввода
+		//PC->SetIgnoreLookInput(true);		Камера
+		PC->DisableInput(PC);
+	}
 
+	// Форсим отпустить все зажатые кнопки
+	Ability1Released();
+	Ability2Released();
+	Ability3Released();
+	Attack1Released();
+	Attack2Released();
+
+	// Сохраняем старого родителя спрингарма
+	if (CameraBoom && !DefaultSpringArmParent)
+	{
+		DefaultSpringArmParent = CameraBoom->GetAttachParent();
+	}
+
+	// Перепривязываем спрингарм к мешу (например, к socket "pelvis")
+	if (CameraBoom && GetMesh())
+	{
+		CameraBoom->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, FName("pelvis"));
+	}
+
+	if (CameraBoom)
+	{
+		CameraBoom->bEnableCameraLag = true;
+		CameraBoom->CameraLagSpeed = CamLagSpeed;
+	}
+
+	// Отключаем коллизию капсулы, чтобы не мешала регдоллу
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// Включаем физику на меше (регдолл)
+	USkeletalMeshComponent* MeshComp = GetMesh();
+	MeshComp->SetCollisionProfileName(TEXT("Ragdoll"));
+	MeshComp->SetSimulatePhysics(true);
+	MeshComp->SetAllBodiesSimulatePhysics(true);
+	MeshComp->WakeAllRigidBodies();
+	MeshComp->bBlendPhysics = true;
+
+	// Запускаем таймер респауна
+	GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &AMainCharacter::Respawn, RespawnDelay, false);
+
+	// Виджет смерти
+	if (PlayerDeathHUDWidget)
+	{
+		PlayerDeathHUDWidget->AddToViewport();
+		PlayerDeathHUDWidget->PlayAnimation(PlayerDeathHUDWidget->FadeInAnimation);
+		GetWorldTimerManager().SetTimer(RespawnHUDTimerHandle, this, &AMainCharacter::RespawnHUDAnim, RespawnDelay-1, false);
+	}
+}
+
+void AMainCharacter::Respawn()
+{
+	// Отправляем на спавн
+	SetActorLocationAndRotation(SpawnLocation, SpawnRotation);
+	GetMesh()->AttachToComponent(GetCapsuleComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -GetCapsuleComponent()->GetScaledCapsuleHalfHeight()));
+	GetMesh()->SetRelativeRotation(SpawnMeshRotation);
+
+	// Выключаем физику
+	USkeletalMeshComponent* MeshComp = GetMesh();
+	MeshComp->SetSimulatePhysics(false);
+	MeshComp->SetAllBodiesSimulatePhysics(false);
+	MeshComp->SetCollisionProfileName(TEXT("CharacterMesh"));
+
+	// Включаем капсулу
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+	// Сбрасываем здоровье в компоненте
+	if (HealthComponent)
+	{
+		HealthComponent->ResetHealth();
+	}
+
+	// Возвращаем управление
+	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
+	if (PC)
+	{
+		PC->SetIgnoreMoveInput(false);
+		//PC->SetIgnoreLookInput(false);
+		PC->EnableInput(PC);
+	}
+
+	// Возвращаем спрингарм на исходного родителя
+	if (CameraBoom && DefaultSpringArmParent)
+	{
+		CameraBoom->AttachToComponent(DefaultSpringArmParent, FAttachmentTransformRules::SnapToTargetIncludingScale);
+		CameraBoom->SetRelativeTransform(DefaultSpringArmRelativeTransform);
+	}
+
+	if (CameraBoom)
+	{
+		CameraBoom->bEnableCameraLag = false;
+	}
+
+	// Виджет смерти
+	if (PlayerDeathHUDWidget)
+	{
+		PlayerDeathHUDWidget->RemoveFromViewport();
+	}
+}
+
+void AMainCharacter::RespawnHUDAnim()
+{
+	if (PlayerDeathHUDWidget && PlayerDeathHUDWidget->FadeOutAnimation)
+	{
+		PlayerDeathHUDWidget->PlayAnimation(PlayerDeathHUDWidget->FadeOutAnimation);
+	}
 }
 
 float AMainCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -195,9 +341,7 @@ float AMainCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 
 void AMainCharacter::HandleHealthChanged(float NewPercent, float DelayedPercent)
 {
-	UE_LOG(LogTemp, Warning, TEXT("HandleHealthChanged"));
 	if (!PlayerHUDWidget) return;
-	UE_LOG(LogTemp, Warning, TEXT("PlayerHUDWidget"));
 	
 		// 1. Получаем вложенный виджет (сам HealthBarHUD)
 		if (UUserWidget* HealthBarHUD = Cast<UUserWidget>(PlayerHUDWidget->GetWidgetFromName(TEXT("WBP_HealthBarHUD"))))
@@ -246,7 +390,8 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Ability3", IE_Pressed, this, &AMainCharacter::Ability3Pressed);
 	PlayerInputComponent->BindAction("Ability3", IE_Released, this, &AMainCharacter::Ability3Released);
 
-	PlayerInputComponent->BindAction("Interact", IE_Pressed, InteractionComponent, &UInteractionComponent::Interact);
+	//PlayerInputComponent->BindAction("Interact", IE_Pressed, InteractionComponent, &UInteractionComponent::Interact);
+	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AMainCharacter::Interact);
 
 	PlayerInputComponent->BindAction("Attack1", IE_Pressed, this, &AMainCharacter::Attack1Pressed);
 	PlayerInputComponent->BindAction("Attack1", IE_Released, this, &AMainCharacter::Attack1Released);
@@ -293,7 +438,7 @@ void AMainCharacter::StopJumping()
 
 void AMainCharacter::Ability1Pressed()
 {
-	if (Ability1_ComponentPtr)
+	if (Ability1_ComponentPtr && !HealthComponent->IsDead())
 	{
 		Ability1_ComponentPtr->PressAbility();
 	}
@@ -309,7 +454,7 @@ void AMainCharacter::Ability1Released()
 
 void AMainCharacter::Ability2Pressed()
 {
-	if (Ability2_ComponentPtr)
+	if (Ability2_ComponentPtr && !HealthComponent->IsDead())
 	{
 		Ability2_ComponentPtr->PressAbility();
 	}
@@ -325,7 +470,7 @@ void AMainCharacter::Ability2Released()
 
 void AMainCharacter::Ability3Pressed()
 {
-	if (Ability3_ComponentPtr)
+	if (Ability3_ComponentPtr && !HealthComponent->IsDead())
 	{
 		Ability3_ComponentPtr->PressAbility();
 	}
@@ -372,52 +517,60 @@ void AMainCharacter::SetAbilityForSlot(int32 SlotIndex, EAbilities NewAbility)
 
 void AMainCharacter::Attack1Pressed()
 {
-	switch (Attack1)
-	{
-	case EAttacks::None: return;
-		break;
-	case EAttacks::LifeDrain: LifeDrainComponent->PressAttack();
-		break;
-	default:
-		break;
+	if (!HealthComponent->IsDead()) {
+		switch (Attack1)
+		{
+		case EAttacks::None: return;
+			break;
+		case EAttacks::LifeDrain: LifeDrainComponent->PressAttack();
+			break;
+		default:
+			break;
+		}
 	}
 }
 
 void AMainCharacter::Attack1Released()
 {
-	switch (Attack1)
-	{
-	case EAttacks::None: return;
-		break;
-	case EAttacks::LifeDrain: LifeDrainComponent->ReleaseAttack();
-		break;
-	default:
-		break;
-	}
+	
+		switch (Attack1)
+		{
+		case EAttacks::None: return;
+			break;
+		case EAttacks::LifeDrain: LifeDrainComponent->ReleaseAttack();
+			break;
+		default:
+			break;
+		}
+	
 }
 
 void AMainCharacter::Attack2Pressed() 
 {
-	switch (Attack2)
-	{
-	case EAttacks::None: return;
-		break;
-	case EAttacks::LifeDrain: LifeDrainComponent->PressAttack();
-		break;
-	default:
-		break;
+	if (!HealthComponent->IsDead()) {
+		switch (Attack2)
+		{
+		case EAttacks::None: return;
+			break;
+		case EAttacks::LifeDrain: LifeDrainComponent->PressAttack();
+			break;
+		default:
+			break;
+		}
 	}
 }
 
 void AMainCharacter::Attack2Released() 
 {
-	switch (Attack2)
-	{
-	case EAttacks::None: return;
-		break;
-	case EAttacks::LifeDrain: LifeDrainComponent->ReleaseAttack();
-		break;
-	default:
-		break;
-	}
+	
+		switch (Attack2)
+		{
+		case EAttacks::None: return;
+			break;
+		case EAttacks::LifeDrain: LifeDrainComponent->ReleaseAttack();
+			break;
+		default:
+			break;
+		}
+	
 }
